@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1"/>
+<meta name="theme-color" content="#08090e"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CSE 2027"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="application-name" content="CSE 2027"/>
+<meta name="description" content="UPSC CSE 2027 Offline Study Planner — Spaced Repetition, Analytics, Cornell Notes"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<link rel="icon" type="image/png" href="icon-192.png"/>
+<title>CSE 2027 — UPSC Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" media="print" onload="this.media='all'"/>
+<style>
+:root{--bg:#08090e;--surf:#0f1117;--surf2:#0a0b12;--bdr:#1e2235;--bdr2:#2a2d45;--pri:#6366f1;--pri2:#4f46e5;--pri-lite:rgba(99,102,241,.12);--ok:#34d399;--warn:#f59e0b;--danger:#ef4444;--txt:#e8eaf0;--txt2:#9ca3af;--muted:#4b5563;--red:#f43f5e;--cyan:#22d3ee;--purple:#c084fc;--orange:#fb923c;--mono:'Space Mono',monospace;--sans:'Sora',system-ui,sans-serif;--serif:'Playfair Display',Georgia,serif;--safe-b:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--txt);-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior:none}
+button,input,textarea,select{font-family:inherit}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:99px}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+/* ═══ SPLASH ═══ */
+#splash{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .5s ease}
+#splash.hide{opacity:0;pointer-events:none}
+.splash-hex{width:110px;height:110px;background:linear-gradient(135deg,#0f1035,#1a1060);border:2px solid var(--pri);border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:50px;animation:splashPulse 2s ease infinite;box-shadow:0 0 40px rgba(99,102,241,.4),0 0 80px rgba(99,102,241,.15)}
+@keyframes splashPulse{0%,100%{transform:scale(1);box-shadow:0 0 40px rgba(99,102,241,.4)}50%{transform:scale(1.05);box-shadow:0 0 60px rgba(99,102,241,.6)}}
+.splash-title{font-size:28px;font-weight:900;letter-spacing:-.5px;color:var(--txt)}
+.splash-sub{font-size:12px;color:var(--pri);letter-spacing:1.5px;text-transform:uppercase;font-weight:600}
+.splash-bar{width:200px;height:3px;background:var(--bdr);border-radius:99px;overflow:hidden;margin-top:8px}
+.splash-bar-fill{height:100%;background:linear-gradient(90deg,var(--pri),#a78bfa);border-radius:99px;animation:splashLoad 2.5s ease forwards}
+@keyframes splashLoad{from{width:0}to{width:100%}}
+.splash-dots{display:flex;gap:6px;margin-top:4px}
+.splash-dot{width:6px;height:6px;border-radius:50%;background:var(--bdr2)}
+.splash-dot:nth-child(1){animation:dotPulse 1s ease .0s infinite}
+.splash-dot:nth-child(2){animation:dotPulse 1s ease .2s infinite}
+.splash-dot:nth-child(3){animation:dotPulse 1s ease .4s infinite}
+@keyframes dotPulse{0%,100%{background:var(--bdr2)}50%{background:var(--pri)}}
+
+/* ═══ SIDEBAR ═══ */
+#sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;opacity:0;pointer-events:none;transition:opacity .3s}
+#sidebar-overlay.on{opacity:1;pointer-events:all}
+#sidebar{position:fixed;top:0;left:-280px;width:280px;height:100%;background:#0b0c15;border-right:1px solid var(--bdr);z-index:301;transition:left .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding-bottom:calc(20px + var(--safe-b));display:flex;flex-direction:column}
+#sidebar.on{left:0}
+.sb-head{padding:20px 16px 16px;border-bottom:1px solid var(--bdr);background:linear-gradient(135deg,#0d0f1a,#111827)}
+.sb-logo{display:flex;align-items:center;gap:10px}
+.sb-logo-ic{width:40px;height:40px;background:linear-gradient(135deg,#0f1035,#1a1060);border:1px solid var(--pri);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.sb-logo-t{font-size:16px;font-weight:900;letter-spacing:-.3px}
+.sb-logo-s{font-size:9px;color:var(--pri);font-weight:600;letter-spacing:.8px;text-transform:uppercase;margin-top:1px}
+.sb-streak{display:flex;align-items:center;gap:8px;margin-top:12px;padding:8px 10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px}
+.sb-streak-ic{font-size:18px}
+.sb-streak-t{font-size:11px;color:var(--warn);font-weight:700}
+.sb-streak-v{font-size:18px;font-weight:900;color:var(--warn);font-family:var(--mono);margin-left:auto}
+.sb-nav{flex:1;padding:10px 0}
+.sb-section{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:10px 16px 4px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;transition:background .15s;border:none;background:transparent;width:100%;text-align:left;color:var(--txt2);font-size:13px;font-weight:600}
+.sb-item:hover,.sb-item.on{background:var(--pri-lite);color:var(--txt)}
+.sb-item.on{border-right:2px solid var(--pri)}
+.sb-item-ic{font-size:16px;width:22px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--pri);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;min-width:18px;text-align:center}
+.sb-footer{padding:12px 16px;border-top:1px solid var(--bdr);font-size:9px;color:var(--muted);text-align:center}
+
+/* ═══ HEADER ═══ */
+#hdr{background:linear-gradient(135deg,#0d0f1a,#111827 60%,#1a1035);border-bottom:1px solid var(--bdr);padding:12px 14px 11px;position:sticky;top:0;z-index:100;flex-shrink:0}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start}
+.hdr-left{display:flex;align-items:center;gap:8px}
+.sb-toggle{background:none;border:none;color:var(--txt2);cursor:pointer;font-size:20px;padding:0 4px;line-height:1;transition:color .2s}
+.sb-toggle:hover{color:var(--pri)}
+.app-title{font-size:16px;font-weight:900;letter-spacing:-.3px}
+.app-sub{font-size:9px;color:var(--pri);margin-top:1px;font-weight:600;letter-spacing:.5px}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.hdr-day{font-size:10px;color:var(--muted)}
+.hdr-date{font-size:10px;color:var(--txt2)}
+#flash{font-size:10px;color:var(--ok);min-height:13px;transition:opacity .3s;text-align:right}
+.pbar-wrap{margin-top:8px}
+.pbar-labels{display:flex;justify-content:space-between;margin-bottom:4px;font-size:9px}
+.pbar-labels span:last-child{font-weight:700;color:var(--pri);font-size:10px}
+.pbar{height:4px;border-radius:99px;background:var(--bdr);overflow:hidden}
+.pbar-fill{height:100%;border-radius:99px;transition:width .6s ease}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px}
+.stat-box{background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:6px;text-align:center}
+.stat-v{font-size:16px;font-weight:900;font-family:var(--mono)}
+.stat-l{font-size:8px;color:var(--muted);margin-top:1px}
+
+/* ═══ LAYOUT ═══ */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+#content{flex:1;overflow-y:auto;overflow-x:hidden;padding:11px 11px calc(70px + var(--safe-b));-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+.panel{display:none;flex-direction:column;gap:10px;animation:panelIn .2s ease}
+.panel.on{display:flex}
+@keyframes panelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══ BOTTOM NAV ═══ */
+#bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(8,9,14,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--bdr);display:flex;z-index:200;padding-bottom:var(--safe-b)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;padding:7px 2px 5px;border:none;background:transparent;cursor:pointer;transition:.15s;min-width:0}
+.nb-dot{width:3px;height:3px;border-radius:50%;background:var(--pri);margin-bottom:2px;opacity:0;transition:.2s}
+.nb.on .nb-dot{opacity:1}
+.nb-ic{font-size:17px;transition:transform .2s;line-height:1}
+.nb.on .nb-ic{transform:translateY(-1px)}
+.nb-lbl{font-size:7px;font-weight:700;color:var(--muted);letter-spacing:.3px;margin-top:1px;white-space:nowrap}
+.nb.on .nb-lbl{color:#a5b4fc}
+.nb-badge{position:absolute;top:5px;background:var(--danger);color:#fff;font-size:7px;font-weight:900;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--bg)}
+.nb-pos{position:relative}
+
+/* ═══ COMPONENTS ═══ */
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:12px;padding:12px 13px}
+.card-title{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px}
+.badge{padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;display:inline-block}
+.tag{padding:1px 5px;border-radius:4px;font-size:8px;font-weight:700;display:inline-block;border:1px solid}
+.cbtn{color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;transition:opacity .15s;white-space:nowrap;display:inline-block}
+.cbtn:active{opacity:.7}
+.inp{width:100%;background:var(--surf2);border:1px solid var(--bdr);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--txt);outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--pri)}
+.inp::placeholder{color:var(--muted)}
+textarea.inp{resize:none;line-height:1.6}
+.empty{text-align:center;padding:30px 16px;color:var(--muted)}
+.empty-ic{font-size:30px;margin-bottom:8px}
+.empty-t{font-size:12px;font-weight:700;color:#374151}
+
+/* ═══ TODAY PANEL ═══ */
+.mentor-card{background:linear-gradient(135deg,#0f1035,#1a1060);border:1px solid #2e2f7a;border-radius:12px;padding:12px 13px}
+.overdue-item{background:#130a0a;border:1px solid #7f1d1d;border-radius:9px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:7px;margin-bottom:5px}
+.today-item{background:#052e1c;border:1px solid #065f46;border-radius:9px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:7px;margin-bottom:5px}
+.week-item{background:#1f1200;border:1px solid #92400e;border-radius:9px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:7px;margin-bottom:5px}
+.rev-item{border-radius:10px;padding:9px 11px;display:flex;gap:7px;align-items:center;margin-bottom:5px;border:1px solid}
+.item-name{font-size:11px;font-weight:700;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item-meta{display:flex;gap:5px;margin-top:3px;flex-wrap:wrap;align-items:center}
+
+/* ═══ TOPICS ═══ */
+.search-wrap{position:relative}
+.s-clear{position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;display:none}
+.subj-card{border-radius:12px;overflow:hidden;margin-bottom:7px;border:1px solid var(--bdr);transition:border-color .2s}
+.subj-hdr{width:100%;border:none;padding:11px 13px;cursor:pointer;text-align:left;background:var(--surf);transition:background .15s}
+.subj-hdr:active{background:var(--bdr)}
+.topic-row{display:flex;align-items:flex-start;gap:10px;padding:9px 13px;border-top:1px solid var(--surf2);background:#080910}
+.topic-cb{width:17px;height:17px;border-radius:4px;border:2px solid #374151;background:transparent;cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.topic-cb.done{background:var(--pri);border-color:var(--pri)}
+.topic-name{font-size:11px;line-height:1.55;color:#d1d5db}
+
+/* ═══ REVISIONS ═══ */
+.rev-legend{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px}
+.rev-leg-item{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--txt2)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.rf-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.rf-btn{padding:4px 9px;border-radius:6px;font-size:9px;font-weight:700;cursor:pointer;border:none;transition:all .2s;font-family:inherit;background:var(--surf2);color:var(--txt2);border:1px solid var(--bdr)}
+.rf-btn.on,.rf-btn:hover{border-color:var(--pri);color:var(--pri);background:var(--pri-lite)}
+
+/* ═══ PROGRESS ═══ */
+.bigpct{background:linear-gradient(135deg,#0f1035,#1a1060);border:1px solid #312e81;border-radius:13px;padding:16px;text-align:center}
+.bigpct-num{font-size:44px;font-weight:900;color:#a5b4fc;line-height:1;font-family:var(--mono)}
+.subj-prog-row{background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.subj-prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.subj-prog-name{font-size:12px;font-weight:700}
+.subj-prog-pct{font-size:11px;font-weight:700;font-family:var(--mono)}
+
+/* ═══ ANALYTICS ═══ */
+.an-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.an-stat{background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:8px;text-align:center}
+.an-stat-v{font-size:20px;font-weight:900;font-family:var(--mono)}
+.an-stat-l{font-size:8px;color:var(--muted);margin-top:2px}
+.chart-wrap{position:relative;background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:10px;overflow:hidden}
+.chart-title{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px}
+canvas.chart-canvas{width:100%!important;display:block}
+.session-log{max-height:200px;overflow-y:auto}
+.session-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bdr)}
+.session-row:last-child{border-bottom:none}
+.session-ic{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.session-info{flex:1;min-width:0}
+.session-subj{font-size:11px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.session-time{font-size:9px;color:var(--muted);margin-top:1px}
+.session-dur{font-size:10px;font-weight:700;color:var(--pri);font-family:var(--mono);white-space:nowrap}
+
+/* ═══ HEATMAP ═══ */
+.heatmap-wrap{background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:10px;overflow-x:auto}
+.heatmap-labels{display:flex;justify-content:space-between;font-size:8px;color:var(--muted);margin-bottom:4px}
+#heatmap-canvas{display:block;margin:0 auto}
+.heatmap-legend{display:flex;align-items:center;gap:4px;margin-top:6px;justify-content:flex-end;font-size:9px;color:var(--muted)}
+.hm-box{width:10px;height:10px;border-radius:2px}
+
+/* ═══ CORNELL NOTES ═══ */
+.cornell-container{background:#1a1208;border:1px solid #3a2a15;border-radius:12px;overflow:hidden}
+.cornell-header{background:#0f0a05;padding:10px 12px;border-bottom:1px solid #3a2a15;display:flex;align-items:center;justify-content:space-between}
+.cornell-body{display:grid;grid-template-columns:1fr 2.5fr;min-height:300px}
+.cornell-cues{border-right:2px solid #c0392b;padding:10px;background:#0a0805}
+.cornell-notes{padding:10px;background:#080604}
+.cornell-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#c0392b;margin-bottom:6px}
+.cornell-notes-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#b8860b;margin-bottom:6px}
+.cornell-textarea{width:100%;background:transparent;border:none;color:#d4c5a0;font-size:11px;line-height:1.8;resize:none;outline:none;min-height:220px;font-family:'Crimson Pro',Georgia,serif}
+.cornell-cues textarea{font-size:11px;color:#c0a060}
+.cornell-summary{grid-column:1/-1;border-top:2px solid #c0392b;padding:10px;background:#060504}
+.cornell-summary-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#c0392b;margin-bottom:6px}
+.cornell-actions{display:flex;gap:6px;padding:10px 12px;background:#050402;border-top:1px solid #2a1a08;flex-wrap:wrap}
+.cornell-print-btn{flex:1;background:linear-gradient(135deg,#1a1208,#2d2010);color:#d4c5a0;border:1px solid #b8860b;border-radius:7px;padding:8px;font-size:11px;font-weight:700;cursor:pointer;text-align:center}
+.cornell-clear-btn{background:#1f0a0a;color:#ef4444;border:1px solid #7f1d1d;border-radius:7px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer}
+
+/* ═══ POMODORO ═══ */
+.timer-presets{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;justify-content:center}
+.tp-btn{padding:4px 8px;border-radius:5px;border:1px solid var(--bdr2);background:var(--surf2);color:var(--txt2);font-size:9px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit}
+.tp-btn.on,.tp-btn:hover{border-color:var(--pri);color:var(--pri);background:var(--pri-lite)}
+.timer-ring-wrap{position:relative;display:flex;align-items:center;justify-content:center;margin:6px 0}
+#timer-ring{transform:rotate(-90deg)}
+#t-fill{transition:stroke-dashoffset 1s linear}
+.timer-center{position:absolute;text-align:center}
+#timer-disp{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--pri);letter-spacing:2px}
+.timer-mode-lbl{font-size:8px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.timer-controls{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.t-pulse{animation:pulse 2s ease infinite}
+#pomo-count{text-align:center;margin-top:5px;font-size:9px;color:var(--muted)}
+
+/* ═══ TASKS ═══ */
+.task-input-row{display:flex;gap:6px;align-items:center}
+.task-input-row .inp{flex:1}
+#task-list{list-style:none;margin-top:7px;display:flex;flex-direction:column;gap:4px}
+.task-item{display:flex;align-items:center;gap:7px;padding:8px 9px;background:var(--surf2);border:1px solid var(--bdr);border-radius:7px}
+.task-cb{width:16px;height:16px;border-radius:3px;border:2px solid var(--pri);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.task-cb.done{background:var(--pri);border-color:var(--pri)}
+.task-txt{flex:1;font-size:11px;color:var(--txt);min-width:0}
+.task-txt.done{text-decoration:line-through;color:var(--muted)}
+.task-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;flex-shrink:0;padding:0 2px}
+
+/* ═══ PYQ ═══ */
+.pyq-pills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.pyq-pill{padding:4px 8px;border-radius:20px;font-size:9px;font-weight:700;cursor:pointer;border:1px solid;transition:all .15s;font-family:inherit}
+.pyq-box{background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;padding:11px;font-size:12px;color:var(--txt);line-height:1.65;min-height:55px;margin-bottom:8px}
+.pyq-ans{background:var(--surf2);border:1px solid var(--bdr2);border-radius:8px;padding:10px;font-size:11px;color:var(--txt2);line-height:1.65;margin-top:7px;display:none}
+.pyq-btns{display:flex;gap:6px}
+.pyq-btns .cbtn{flex:1;text-align:center}
+
+/* ═══ PHASES ═══ */
+.plan-banner{background:linear-gradient(135deg,#0f1035,#0f2030);border:1px solid #1e3a5f;border-radius:12px;padding:12px}
+.phase-card{border-radius:12px;overflow:hidden;margin-bottom:8px}
+.phase-hdr{padding:11px 13px}
+.phase-body{background:var(--bg);padding:10px 12px}
+.phase-item{display:flex;gap:7px;padding:4px 0;font-size:11px;color:var(--txt2);align-items:flex-start}
+
+/* ═══ BACKUP ═══ */
+.backup-section{background:var(--surf2);border:1px solid var(--bdr);border-radius:10px;padding:12px}
+.backup-btn{width:100%;padding:10px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:7px;transition:opacity .15s}
+.backup-btn:active{opacity:.7}
+
+/* ═══ NOTIFICATIONS PANEL ═══ */
+.notif-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--bdr)}
+.notif-row:last-child{border-bottom:none}
+.notif-label{font-size:12px;font-weight:600;color:var(--txt)}
+.notif-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.toggle-btn{width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s;background:var(--bdr2);flex-shrink:0}
+.toggle-btn::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle-btn.on{background:var(--pri)}
+.toggle-btn.on::after{transform:translateX(20px)}
+
+/* ═══ INSTALL BAR ═══ */
+#install-bar{background:linear-gradient(135deg,#0f2d0f,#1a3a1a);border:1px solid #166534;border-radius:10px;padding:10px 12px;display:none;align-items:center;gap:8px;margin-bottom:2px}
+#install-bar.on{display:flex}
+.ib-txt{flex:1;font-size:11px;color:#86efac}
+.ib-txt strong{display:block;font-size:12px;margin-bottom:1px}
+
+/* ═══ PRINT STYLES ═══ */
+@media print{
+  #splash,#bnav,#hdr,#sidebar,#sidebar-overlay,#install-bar{display:none!important}
+  body{background:#fff;color:#000;overflow:visible}
+  #app{height:auto;overflow:visible}
+  #content{overflow:visible;padding:0}
+  .panel{display:flex!important;break-inside:avoid}
+  .cornell-container{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div class="splash-hex">🎓</div>
+  <div>
+    <div class="splash-title">CSE 2027</div>
+    <div class="splash-sub">UPSC Study Planner</div>
+  </div>
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+  <div class="splash-dots"><div class="splash-dot"></div><div class="splash-dot"></div><div class="splash-dot"></div></div>
+  <div style="font-size:10px;color:var(--muted);margin-top:4px">Loading offline database…</div>
+</div>
+
+<!-- SIDEBAR OVERLAY -->
+<div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sb-head">
+    <div class="sb-logo">
+      <div class="sb-logo-ic">🎓</div>
+      <div><div class="sb-logo-t">CSE 2027</div><div class="sb-logo-s">UPSC Planner</div></div>
+    </div>
+    <div class="sb-streak">
+      <span class="sb-streak-ic">🔥</span>
+      <span class="sb-streak-t">Current Streak</span>
+      <span class="sb-streak-v" id="sb-streak-val">0</span>
+      <span style="font-size:9px;color:var(--warn)">days</span>
+    </div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-section">Study</div>
+    <button class="sb-item on" onclick="switchTab(0,true)" data-tab="0"><span class="sb-item-ic">🏠</span>Today's Plan</button>
+    <button class="sb-item" onclick="switchTab(1,true)" data-tab="1"><span class="sb-item-ic">📚</span>Topics<span class="sb-badge" id="sb-done-badge">0</span></button>
+    <button class="sb-item" onclick="switchTab(2,true)" data-tab="2"><span class="sb-item-ic">🔁</span>Revisions<span class="sb-badge" id="sb-rev-badge" style="background:var(--danger)">0</span></button>
+    <button class="sb-item" onclick="switchTab(3,true)" data-tab="3"><span class="sb-item-ic">📊</span>Analytics</button>
+    <div class="sb-section">Tools</div>
+    <button class="sb-item" onclick="switchTab(4,true)" data-tab="4"><span class="sb-item-ic">📝</span>Cornell Notes</button>
+    <button class="sb-item" onclick="switchTab(5,true)" data-tab="5"><span class="sb-item-ic">⏱</span>Pomodoro</button>
+    <button class="sb-item" onclick="switchTab(6,true)" data-tab="6"><span class="sb-item-ic">❓</span>PYQ Practice</button>
+    <button class="sb-item" onclick="switchTab(7,true)" data-tab="7"><span class="sb-item-ic">✅</span>Daily Tasks</button>
+    <div class="sb-section">Plan</div>
+    <button class="sb-item" onclick="switchTab(8,true)" data-tab="8"><span class="sb-item-ic">📈</span>Progress</button>
+    <button class="sb-item" onclick="switchTab(9,true)" data-tab="9"><span class="sb-item-ic">🗺</span>Phases</button>
+    <div class="sb-section">Settings</div>
+    <button class="sb-item" onclick="switchTab(10,true)" data-tab="10"><span class="sb-item-ic">🔔</span>Reminders</button>
+    <button class="sb-item" onclick="switchTab(11,true)" data-tab="11"><span class="sb-item-ic">💾</span>Backup & Export</button>
+  </div>
+  <div class="sb-footer">v4.0 · Offline First · IndexedDB</div>
+</div>
+
+<!-- APP WRAPPER -->
+<div id="app">
+  <!-- HEADER -->
+  <div id="hdr">
+    <div class="hdr-top">
+      <div class="hdr-left">
+        <button class="sb-toggle" onclick="toggleSidebar()">☰</button>
+        <div><div class="app-title">🎓 CSE 2027</div><div class="app-sub">Working Professional · DCSEM</div></div>
+      </div>
+      <div class="hdr-right">
+        <div class="hdr-day" id="hdr-day"></div>
+        <div class="hdr-date" id="hdr-date"></div>
+        <div id="flash"></div>
+      </div>
+    </div>
+    <div class="pbar-wrap">
+      <div class="pbar-labels"><span>Syllabus Progress</span><span id="hdr-prog-txt">0/0 · 0%</span></div>
+      <div class="pbar"><div class="pbar-fill" id="hdr-pbar" style="width:0%;background:linear-gradient(90deg,var(--pri),#8b5cf6)"></div></div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-v" id="s-done" style="color:var(--ok)">0</div><div class="stat-l">Done</div></div>
+      <div class="stat-box"><div class="stat-v" id="s-due" style="color:var(--danger)">0</div><div class="stat-l">Rev Due</div></div>
+      <div class="stat-box"><div class="stat-v" id="s-rdone" style="color:var(--pri)">0</div><div class="stat-l">Rev✓</div></div>
+      <div class="stat-box"><div class="stat-v" id="s-streak" style="color:var(--warn)">0</div><div class="stat-l">🔥Streak</div></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+    <div id="install-bar">
+      <span style="font-size:18px">📲</span>
+      <div class="ib-txt"><strong>Install as App</strong>Offline, no internet needed</div>
+      <button class="cbtn" style="background:#166534" id="ib-btn">Install</button>
+      <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 2px" id="ib-close">×</button>
+    </div>
+
+    <!-- P0: TODAY -->
+    <div class="panel on" id="p0">
+      <div class="mentor-card">
+        <div id="mentor-lbl" style="font-size:8px;font-weight:700;color:#818cf8;margin-bottom:7px;letter-spacing:1px;text-transform:uppercase"></div>
+        <div style="display:flex;gap:9px;align-items:flex-start">
+          <span id="mentor-ic" style="font-size:18px;flex-shrink:0"></span>
+          <p id="mentor-tip" style="font-size:12px;color:#c7d2fe;line-height:1.65;margin:0"></p>
+        </div>
+      </div>
+      <div id="today-tasks-quick"></div>
+      <div id="overdue-sec"></div>
+      <div id="today-sec"></div>
+      <div id="next-sec"></div>
+      <div id="week-sec"></div>
+    </div>
+
+    <!-- P1: TOPICS -->
+    <div class="panel" id="p1">
+      <div class="search-wrap">
+        <input class="inp" id="s-inp" placeholder="🔍  Search topics…" oninput="renderTopics()"/>
+        <button class="s-clear" id="s-clear" onclick="clearSearch()">×</button>
+      </div>
+      <div id="search-res"></div>
+      <div id="subj-list"></div>
+    </div>
+
+    <!-- P2: REVISIONS -->
+    <div class="panel" id="p2">
+      <div class="card">
+        <div class="card-title">Spaced Repetition Schedule</div>
+        <div class="rev-legend">
+          <div class="rev-leg-item"><div class="dot" style="background:var(--danger)"></div>Overdue</div>
+          <div class="rev-leg-item"><div class="dot" style="background:var(--ok)"></div>Today</div>
+          <div class="rev-leg-item"><div class="dot" style="background:var(--warn)"></div>This Week</div>
+          <div class="rev-leg-item"><div class="dot" style="background:var(--pri)"></div>Later</div>
+        </div>
+        <div class="rf-wrap" id="rf-wrap"></div>
+      </div>
+      <div id="rev-list"></div>
+    </div>
+
+    <!-- P3: ANALYTICS -->
+    <div class="panel" id="p3">
+      <div class="an-stats" id="an-stats"></div>
+      <div class="heatmap-wrap">
+        <div class="chart-title">60-Day Study Heatmap</div>
+        <div class="heatmap-labels"><span id="hm-start-label"></span><span id="hm-end-label">Today</span></div>
+        <canvas id="heatmap-canvas" height="90"></canvas>
+        <div class="heatmap-legend">Less <div class="hm-box" style="background:#1e2235"></div><div class="hm-box" style="background:#166534"></div><div class="hm-box" style="background:#16a34a"></div><div class="hm-box" style="background:#22c55e"></div><div class="hm-box" style="background:#4ade80"></div> More</div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Study Hours — Last 14 Days</div>
+        <canvas id="line-chart" class="chart-canvas" height="120"></canvas>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Sessions Per Subject</div>
+        <canvas id="bar-chart" class="chart-canvas" height="140"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>Recent Sessions</span>
+          <button onclick="logSession()" class="cbtn" style="background:var(--pri);font-size:9px;padding:3px 8px">+ Log Session</button>
+        </div>
+        <div class="session-log" id="session-log"></div>
+      </div>
+      <div class="card" style="text-align:center">
+        <button onclick="clearAnalytics()" style="background:none;border:1px solid #7f1d1d;color:var(--danger);border-radius:7px;padding:6px 14px;font-size:10px;cursor:pointer;font-family:inherit">🗑 Clear Analytics Data</button>
+      </div>
+    </div>
+
+    <!-- P4: CORNELL NOTES -->
+    <div class="panel" id="p4">
+      <div class="card">
+        <div class="card-title">Cornell Notes Template</div>
+        <div style="font-size:11px;color:var(--txt2);margin-bottom:8px;line-height:1.6">Type notes in Cornell format. Left = cue questions, Right = main notes, Bottom = summary. Print or save as PDF.</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+          <input class="inp" id="cn-title" placeholder="Topic / Subject" style="flex:2;min-width:140px"/>
+          <input class="inp" id="cn-date" type="date" style="flex:1;min-width:110px"/>
+        </div>
+      </div>
+      <div class="cornell-container" id="cornell-container">
+        <div class="cornell-header">
+          <span id="cn-header-title" style="font-size:12px;font-weight:700;color:#d4c5a0;font-family:var(--serif)">Cornell Notes</span>
+          <span id="cn-header-date" style="font-size:10px;color:#7a6e5f;font-family:var(--mono)"></span>
+        </div>
+        <div class="cornell-body">
+          <div class="cornell-cues">
+            <div class="cornell-label">Keywords / Cues</div>
+            <textarea class="cornell-textarea" id="cn-cues" placeholder="• Key terms&#10;• Questions&#10;• Dates&#10;• Names&#10;&#10;(Review this column)"></textarea>
+          </div>
+          <div class="cornell-notes">
+            <div class="cornell-notes-label">Notes</div>
+            <textarea class="cornell-textarea" id="cn-notes" placeholder="Write main content here…&#10;&#10;• Facts, concepts, explanations&#10;• Use bullet points or numbered lists&#10;• Leave space for additions&#10;• Keep sentences concise"></textarea>
+          </div>
+        </div>
+        <div class="cornell-summary">
+          <div class="cornell-summary-label">Summary</div>
+          <textarea class="cornell-textarea" id="cn-summary" placeholder="Write a 3–5 line summary of main ideas. This is your quick recall trigger." style="min-height:70px"></textarea>
+        </div>
+        <div class="cornell-actions">
+          <button class="cornell-print-btn" onclick="printCornell()">🖨 Print / Save as PDF</button>
+          <button onclick="saveCornellNote()" class="cbtn" style="background:var(--pri);padding:8px 14px">💾 Save Note</button>
+          <button class="cornell-clear-btn" onclick="clearCornell()">✕</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Saved Cornell Notes</div>
+        <div id="cornell-saved-list"></div>
+      </div>
+    </div>
+
+    <!-- P5: POMODORO -->
+    <div class="panel" id="p5">
+      <div class="card">
+        <div class="card-title">⏱ Pomodoro Timer</div>
+        <div class="timer-presets">
+          <button class="tp-btn on" onclick="setPreset(25,'FOCUS',this)">25m</button>
+          <button class="tp-btn" onclick="setPreset(5,'SHORT BREAK',this)">5m Break</button>
+          <button class="tp-btn" onclick="setPreset(15,'LONG BREAK',this)">15m</button>
+          <button class="tp-btn" onclick="setPreset(45,'DEEP WORK',this)">45m</button>
+          <button class="tp-btn" onclick="setPreset(60,'MARATHON',this)">60m</button>
+        </div>
+        <div style="font-size:8px;color:var(--muted);text-align:center;margin-bottom:6px">Custom: <input class="inp" id="t-inp" type="number" min="1" max="180" value="25" style="width:55px;display:inline-block;text-align:center;padding:3px 6px;font-size:11px"/> min</div>
+        <div class="timer-mode-lbl" id="t-mode">FOCUS MODE</div>
+        <div class="timer-ring-wrap">
+          <svg id="timer-ring" width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="var(--bdr)" stroke-width="7"/>
+            <circle id="t-fill" cx="60" cy="60" r="52" fill="none" stroke="var(--pri)" stroke-width="7" stroke-dasharray="326.7" stroke-dashoffset="0" stroke-linecap="round"/>
+          </svg>
+          <div class="timer-center">
+            <div id="timer-disp">25:00</div>
+            <div style="font-size:8px;color:var(--muted)">remaining</div>
+          </div>
+        </div>
+        <div class="timer-controls">
+          <button class="cbtn" id="t-start" style="background:var(--pri)" onclick="startTimer()">▶ Start</button>
+          <button class="cbtn" id="t-pause" style="background:var(--bdr2);display:none" onclick="pauseTimer()">⏸ Pause</button>
+          <button class="cbtn" style="background:var(--surf2);border:1px solid var(--bdr)" onclick="resetTimer()">↺ Reset</button>
+        </div>
+        <div id="pomo-count">Sessions today: <span id="pomo-today">0</span></div>
+        <div style="margin-top:8px">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:4px">Log session for subject:</div>
+          <select class="inp" id="pomo-subject" style="font-size:11px">
+            <option value="">— Select Subject —</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- P6: PYQ PRACTICE -->
+    <div class="panel" id="p6">
+      <div class="card">
+        <div class="card-title">❓ Previous Year Questions</div>
+        <div class="pyq-pills" id="pyq-pills"></div>
+        <div class="pyq-box" id="pyq-box">Tap a subject above then load a question.</div>
+        <div class="pyq-ans" id="pyq-ans"></div>
+        <div class="pyq-btns" style="margin-top:6px">
+          <button class="cbtn" style="background:var(--pri)" onclick="loadPYQ()">🔀 New Q</button>
+          <button class="cbtn" style="background:#065f46" onclick="showAns()">✓ Show Answer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- P7: TASKS -->
+    <div class="panel" id="p7">
+      <div class="card">
+        <div class="card-title">✅ Daily Task List</div>
+        <div class="task-input-row">
+          <input class="inp" id="t-task" placeholder="Add a task… (press Enter)" onkeydown="if(event.key==='Enter')addTask()"/>
+          <button class="cbtn" style="background:var(--pri)" onclick="addTask()">+</button>
+        </div>
+        <div style="display:flex;gap:5px;margin-top:7px;flex-wrap:wrap">
+          <input class="inp" id="t-task-time" type="time" style="flex:1;min-width:90px;font-size:11px" title="Set reminder time"/>
+          <button class="cbtn" style="background:var(--warn);font-size:10px" onclick="setTaskReminder()">🔔 Set Reminder</button>
+        </div>
+        <ul id="task-list"></ul>
+        <button onclick="clearDone()" style="margin-top:6px;background:none;border:1px solid var(--bdr2);color:var(--muted);border-radius:6px;padding:4px 10px;font-size:9px;cursor:pointer;font-family:inherit">Clear Completed</button>
+      </div>
+    </div>
+
+    <!-- P8: PROGRESS -->
+    <div class="panel" id="p8">
+      <div class="bigpct">
+        <div class="bigpct-num" id="big-pct">0%</div>
+        <div style="font-size:10px;color:var(--pri);margin-top:4px">Overall Syllabus Complete</div>
+        <div id="big-sub" style="font-size:9px;color:var(--muted);margin-top:2px"></div>
+      </div>
+      <div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.8px;text-transform:uppercase">Subject-wise Progress</div>
+      <div id="subj-prog"></div>
+      <div style="text-align:center;margin-top:2px">
+        <button onclick="clearAll()" style="background:none;border:1px solid #7f1d1d;color:var(--danger);border-radius:7px;padding:6px 14px;font-size:10px;cursor:pointer;font-family:inherit">🗑 Reset All Progress</button>
+      </div>
+    </div>
+
+    <!-- P9: PHASES -->
+    <div class="panel" id="p9">
+      <div class="plan-banner">
+        <div style="font-size:10px;font-weight:700;color:#60a5fa;margin-bottom:9px;letter-spacing:.8px;text-transform:uppercase">Broad Study Plan</div>
+        <div id="plan-rows"></div>
+      </div>
+      <div id="phase-list"></div>
+    </div>
+
+    <!-- P10: REMINDERS -->
+    <div class="panel" id="p10">
+      <div class="card">
+        <div class="card-title">🔔 Notification Settings</div>
+        <div id="notif-perm-bar" style="display:none;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:9px 11px;margin-bottom:10px;font-size:11px;color:var(--warn)">
+          ⚠️ Notifications are blocked. Tap to enable in browser settings.
+        </div>
+        <div id="notif-grant-bar" style="display:none;background:var(--pri-lite);border:1px solid var(--pri);border-radius:8px;padding:9px 11px;margin-bottom:10px">
+          <div style="font-size:11px;color:#a5b4fc;margin-bottom:6px">Enable notifications for study reminders</div>
+          <button onclick="requestNotifPerm()" class="cbtn" style="background:var(--pri);width:100%">🔔 Enable Notifications</button>
+        </div>
+        <div class="notif-row">
+          <div><div class="notif-label">Daily Study Reminder</div><div class="notif-sub">Get reminded to study every day</div></div>
+          <button class="toggle-btn" id="tog-daily" onclick="toggleReminder('daily')"></button>
+        </div>
+        <div style="padding:8px 0;border-bottom:1px solid var(--bdr)">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:5px">Reminder Time</div>
+          <input class="inp" type="time" id="reminder-time" value="06:00" style="font-size:13px" onchange="saveReminderTime()"/>
+        </div>
+        <div class="notif-row">
+          <div><div class="notif-label">Revision Alerts</div><div class="notif-sub">Notify when revisions are due</div></div>
+          <button class="toggle-btn" id="tog-rev" onclick="toggleReminder('rev')"></button>
+        </div>
+        <div class="notif-row">
+          <div><div class="notif-label">Streak Reminder</div><div class="notif-sub">Evening reminder to keep streak alive</div></div>
+          <button class="toggle-btn" id="tog-streak" onclick="toggleReminder('streak')"></button>
+        </div>
+        <div class="notif-row">
+          <div><div class="notif-label">Pomodoro Alerts</div><div class="notif-sub">Notify when Pomodoro ends</div></div>
+          <button class="toggle-btn on" id="tog-pomo" onclick="toggleReminder('pomo')"></button>
+        </div>
+        <div style="margin-top:10px">
+          <button onclick="sendTestNotif()" class="cbtn" style="background:var(--surf2);border:1px solid var(--bdr);color:var(--txt);width:100%;text-align:center">📢 Send Test Notification</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- P11: BACKUP -->
+    <div class="panel" id="p11">
+      <div class="card">
+        <div class="card-title">💾 Backup & Export</div>
+        <button class="backup-btn" style="background:linear-gradient(135deg,#065f46,#064e3b);color:#34d399;border:1px solid #065f46" onclick="exportData()">⬇ Export All Data as JSON</button>
+        <button class="backup-btn" style="background:linear-gradient(135deg,#1e3a5f,#0f2d4a);color:#60a5fa;border:1px solid #1e3a5f" onclick="document.getElementById('import-file').click()">⬆ Import / Restore JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)"/>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6">⚠️ Import will merge with existing data. Topics, revisions, sessions, tasks and Cornell notes are all included.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Data Summary</div>
+        <div id="data-summary" style="font-size:11px;color:var(--txt2);line-height:1.9"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">ℹ️ PWA / APK Info</div>
+        <div style="font-size:11px;color:var(--txt2);line-height:1.8">
+          <strong style="color:var(--txt)">To install as APK:</strong><br>
+          1. Open in Chrome browser on Android<br>
+          2. Tap ⋮ menu → "Add to Home Screen"<br>
+          3. For full APK: Visit <span style="color:var(--pri)">pwabuilder.com</span>, enter this app's URL, and download the Android APK package.<br><br>
+          <strong style="color:var(--txt)">100% Offline:</strong> All data stored in IndexedDB. No internet needed after first load.
+        </div>
+      </div>
+    </div>
+  </div><!-- /content -->
+
+  <!-- BOTTOM NAV -->
+  <nav id="bnav">
+    <button class="nb on" id="nb0" onclick="switchTab(0)"><div class="nb-dot"></div><span class="nb-ic">🏠</span><div class="nb-lbl">Today</div></button>
+    <button class="nb" id="nb1" onclick="switchTab(1)"><div class="nb-dot"></div><span class="nb-ic">📚</span><div class="nb-lbl">Topics</div></button>
+    <div class="nb-pos" style="flex:1">
+      <button class="nb" id="nb2" onclick="switchTab(2)" style="width:100%"><div class="nb-dot"></div><span class="nb-ic">🔁</span><div class="nb-lbl">Revisions</div></button>
+      <div class="nb-badge" id="rev-badge" style="display:none">0</div>
+    </div>
+    <button class="nb" id="nb3" onclick="switchTab(3)"><div class="nb-dot"></div><span class="nb-ic">📊</span><div class="nb-lbl">Analytics</div></button>
+    <button class="nb" id="nb4" onclick="switchTab(4)"><div class="nb-dot"></div><span class="nb-ic">📝</span><div class="nb-lbl">Cornell</div></button>
+    <button class="nb" id="nb5" onclick="switchTab(5)"><div class="nb-dot"></div><span class="nb-ic">⏱</span><div class="nb-lbl">Timer</div></button>
+  </nav>
+</div><!-- /app -->
+<script>
+"use strict";
+/* ═══════════════════════════════════════
+   SUBJECT & TOPIC DATA
+═══════════════════════════════════════ */
+const SUBJECTS=[
+  {id:"polity",name:"Polity & Governance",icon:"⚖️",color:"#6366f1",phase:1,period:"Apr–Jun 2026",cls:70,
+   topics:["Introduction to Constitution — Making, Nature, Features","Preamble — Significance, Keywords","Fundamental Rights (Part III) — Articles 12–35","Directive Principles (Part IV) — Articles 36–51","Fundamental Duties — Article 51A","Amendment of Constitution — Article 368","Parliament — Lok Sabha, Rajya Sabha, Functions","Parliamentary Procedures — Budget, Bills, Sessions","Executive — President, Vice President, PM, Council of Ministers","Judiciary — Supreme Court, High Courts, Judicial Review","Federalism — Centre-State Relations, Finance Commission","Local Self-Government — 73rd, 74th Amendments","Emergency Provisions — Articles 352, 356, 360","Election Commission & Electoral System","Constitutional & Statutory Bodies — CAG, NHRC, CIC","Governance — Good Governance, e-Governance, Citizen Charter","Anti-Defection Law — Tenth Schedule","Official Language — Articles 343–351","Special Provisions — Articles 371A to 371J","Constitutional Amendments — Major ones"]},
+  {id:"economics",name:"Economics",icon:"📊",color:"#38bdf8",phase:1,period:"Apr–Jun 2026",cls:60,
+   topics:["Basic Concepts — Micro vs Macro, Opportunity Cost","National Income — GDP, GNP, NNP, NDP","Measuring National Income — 3 Methods","Money — Functions, Types, M0–M4","Commercial Banking — Functions & Credit Creation","RBI — Structure, Functions & Role","Monetary Policy — Repo, CRR, SLR, OMO","Inflation — Types, Causes & Measures (WPI, CPI)","Fiscal Policy — Revenue, Expenditure & FRBM","Union Budget — Key Terms & Components","Types of Deficits — Fiscal, Revenue, Primary, CAD","Taxation — Direct & Indirect, GST Structure","Balance of Payments — Current & Capital Account","Foreign Trade Policy — WTO, Exports, Imports","Agriculture — Green Revolution, MSP, APMC","Industry — MSME, Industrial Policy, PLI Scheme","Poverty — Measurement, SECC, Programmes","Unemployment — Types, PLFS, CMIE","Human Development — HDI, MPI, IHDI","Key Economic Surveys & Budget Themes","Capital Markets — SEBI, Stock Exchange","International Institutions — IMF, World Bank, ADB"]},
+  {id:"geography",name:"Geography",icon:"🗺️",color:"#34d399",phase:1,period:"Apr–Jun 2026",cls:80,
+   topics:["Earth — Origin, Structure & Interior","Plate Tectonics — Concepts, Types","Earthquakes & Volcanoes","Geomorphology — Rocks, Weathering","Atmosphere — Composition, Layers, Insolation","Pressure Belts, Winds & Jet Streams","Tropical & Temperate Cyclones","World Climate Types (Köppen)","Biomes — Distribution & Characteristics","Oceanography — Currents, Tides, Salinity, ENSO","India — Physical Features (Himalayas, Plains)","India — Drainage Systems","India — Monsoon Mechanism & Seasons","India — Soils — Types, Distribution","India — Natural Vegetation & Forests","India — Crops — Rabi, Kharif, Zaid","India — Mineral & Energy Resources","India — Renewable Energy","India — Industries & Transport","India — Population — Census, Density","World — Physical Geography","Map Practice — Rivers, Mountains, Straits"]},
+  {id:"modernhistory",name:"Modern History",icon:"🏛️",color:"#c084fc",phase:1,period:"Apr–Jun 2026",cls:50,
+   topics:["European Penetration — Portuguese, Dutch, French","British Conquest of India","British Administrative System","Economic Impact of British Rule","Social & Religious Reforms — Pre-1857","Ram Mohan Roy & Brahmo Samaj","Revolt of 1857","Post-1857 Changes — Crown Rule","Rise of Indian Nationalism","Indian National Congress — Formation & Early","Moderate Phase (1885–1905)","Partition of Bengal (1905) & Swadeshi","Extremist Phase — Bal-Lal-Pal","Revolutionary Nationalism","Morley-Minto Reforms 1909","Lucknow Pact 1916 & Home Rule","Gandhian Entry — Champaran, Kheda","Rowlatt Act & Jallianwala Bagh","Non-Cooperation Movement (1920–22)","Simon Commission & Nehru Report","Civil Disobedience Movement — Dandi March","Round Table Conferences","Government of India Act 1935","Quit India Movement (1942)","Subhas Chandra Bose & INA","Post-WWII — Independence & Partition"]},
+  {id:"ancienthistory",name:"Ancient & Medieval History",icon:"🏺",color:"#fb7185",phase:2,period:"Jul–Sep 2026",cls:40,
+   topics:["Prehistoric India — Palaeolithic to Neolithic","Indus Valley Civilisation","Vedic Period — Early & Later","Jainism — Mahavira, Doctrines","Buddhism — Buddha, Teachings, Spread","Mahajanapadas & Rise of Magadha","Mauryan Empire — Ashoka & Dhamma","Post-Mauryan Dynasties","Sangam Age — South India","Gupta Empire — Golden Age","Post-Gupta — Harsha, Regional Kingdoms","Cholas — Administration & Architecture","Science & Culture in Ancient India","Delhi Sultanate — Slave, Khilji, Tughlaq","Bhakti & Sufi Movements","Vijayanagara & Bahmani Kingdoms","Mughal Empire — Babur to Aurangzeb","Maratha Empire — Shivaji, Peshwas","Medieval Art, Architecture & Literature"]},
+  {id:"environment",name:"Environment & Ecology",icon:"🌿",color:"#a3e635",phase:2,period:"Sep–Oct 2026",cls:35,
+   topics:["Ecology Basics — Ecosystem Components","Food Chain, Food Web & Energy Flow","Biogeochemical Cycles","Biodiversity — Levels, Hotspots","Threats to Biodiversity","In-situ & Ex-situ Conservation","Protected Areas — National Parks, Sanctuaries","Wildlife Laws — WPA 1972","Environmental Pollution — Air, Water, Soil","Climate Change — Causes, Effects","UNFCCC, Kyoto Protocol, Paris Agreement","IPCC Reports — Key Findings","Ozone Layer & Montreal Protocol","Environmental Conventions — Ramsar, CITES, CBD","Environmental Laws — EPA 1986, EIA","Sustainable Development Goals (SDGs)"]},
+  {id:"sciencetech",name:"Science & Technology",icon:"🔬",color:"#fb923c",phase:2,period:"Oct–Nov 2026",cls:30,
+   topics:["Space — ISRO Missions, Satellites","Space — International Missions","Defence Technology — Missiles, DRDO","Nuclear Technology — Types, Reactors","Biotechnology — GM Crops, CRISPR","Nanotechnology — Basics, Applications","AI, Machine Learning & Big Data","Blockchain & FinTech","Cybersecurity — Threats, IT Act","Renewable Energy Technologies","Medical Science — Vaccines, Genomics","Recent Science Discoveries"]},
+  {id:"artculture",name:"Art & Culture",icon:"🎭",color:"#22d3ee",phase:2,period:"Nov–Dec 2026",cls:25,
+   topics:["Temple Architecture — Nagara, Dravidian, Vesara","Cave Architecture — Ajanta, Ellora","Mughal & Indo-Islamic Architecture","Sculpture Traditions","Painting Traditions — Ajanta to Modern","Classical Dance Forms (8 forms)","Classical Music — Hindustani & Carnatic","Folk Arts, Crafts & Textile","Sanskrit & Regional Literature","Fairs, Festivals & Rituals","UNESCO Heritage Sites"]},
+];
+
+const PHASES=[
+  {id:1,emoji:"🏗️",label:"Phase 1",title:"Foundation Layer",period:"April → June 2026",color:"#f59e0b",subs:["polity","economics","geography","modernhistory"],extra:["Current Affairs — Daily from Day 1","PYQ practice topic-wise every weekend"]},
+  {id:2,emoji:"✍️",label:"Phase 2",title:"Depth + Answer Writing",period:"July → December 2026",color:"#c084fc",subs:["ancienthistory","environment","sciencetech","artculture"],extra:["Geography Optional — systematic","Answer Writing — 2 answers/day from July","Current Affairs — daily + monthly magazines"]},
+  {id:3,emoji:"🔥",label:"Phase 3",title:"Prelims Revision Sprint",period:"January → March 2027",color:"#ef4444",subs:[],extra:["All 8 subjects — full revision cycle","Daily mocks — 50 Qs timed","Current Affairs last 12 months rapid review","CSAT Paper 2 — ensure 33% cutoff"]},
+  {id:4,emoji:"🎯",label:"Phase 4",title:"Final Blast",period:"April → May 2027",color:"#f43f5e",subs:[],extra:["Full 100-Q mocks daily","Mock analysis — 1 hr after every test","Flashcard mega-review 200 cards/day","Sleep 7 hrs — non-negotiable"]},
+];
+
+const TIPS=[
+  {ic:"📌",tip:"Start with Polity — it forms the backbone of GS Paper 2 and bleeds into every other subject."},
+  {ic:"🧠",tip:"After every class, do a 10-min Blank Page recall. Close everything and write what you remember. The struggle IS the learning."},
+  {ic:"📓",tip:"Cornell notes: Left = questions, Right = notes, Bottom = 3-line summary. Left column becomes your revision tool."},
+  {ic:"🔁",tip:"Spaced repetition is compounding interest for your memory. Every tick here is a deposit in your long-term recall bank."},
+  {ic:"💪",tip:"3 focused hours beat 8 distracted hours every single time. Quality of attention > quantity of hours."},
+  {ic:"⏰",tip:"Your 5:30 AM block is your highest-value window. Cortisol peaks, distractions zero, memory encoding strongest."},
+  {ic:"📰",tip:"Tag every Current Affairs item by subject. Your CA notebook is a revision asset, not just a reading log."},
+  {ic:"📝",tip:"PYQs are UPSC's clearest signal. 30–40% of Prelims are concept-repeats. Do them topic-by-topic after each subject."},
+  {ic:"🗣️",tip:"Feynman method: explain any topic as if teaching a 12-year-old. Every stumble = a gap in understanding."},
+  {ic:"😴",tip:"Sleep IS studying. Hippocampus replays learning during deep sleep. 10:30 PM hard stop."},
+  {ic:"🎯",tip:"Geography Optional: every fact must be anchored to a location. Always study with an atlas open."},
+  {ic:"✍️",tip:"From July, write 2 answers daily. Answer writing is a separate skill — start early."},
+];
+
+const PYQ={
+  polity:[
+    {q:"What is the Basic Structure Doctrine? Which case established it?",a:"Holds that Parliament cannot amend Constitution to destroy its 'basic structure'. Established in Kesavananda Bharati v. State of Kerala (1973). Core elements: supremacy of Constitution, republican & democratic form, secular character, separation of powers, judicial review."},
+    {q:"Distinguish between Fundamental Rights and Directive Principles.",a:"FRs (Part III): justiciable, individually enforceable, negative (restrain state). DPSPs (Part IV): non-justiciable, positive (guide state). Art.37: DPSPs are fundamental to governance. After Minerva Mills (1980), both are complementary."},
+    {q:"Explain emergency provisions under Articles 352, 356 and 360.",a:"Art.352 (National Emergency): War, external aggression, armed rebellion. Art.356 (President's Rule): Constitutional machinery failure in state. Art.360 (Financial Emergency): Financial stability threatened. All require Parliamentary approval."},
+    {q:"Explain the Anti-Defection Law (Tenth Schedule).",a:"Added by 52nd Amendment (1985). Disqualification if: (1) voluntarily gives up party membership, (2) votes against party whip. Exception: merger of ≥2/3 members. Decision by Speaker — subject to judicial review (Kihoto Hollohan, 1992)."},
+    {q:"What are the qualifications to become President of India?",a:"(1) Indian citizen, (2) Completed 35 years, (3) Qualified for Lok Sabha membership, (4) Must not hold any office of profit. Elected by Electoral College: elected MPs + elected MLAs."},
+  ],
+  economics:[
+    {q:"Difference between Repo Rate and Reverse Repo Rate?",a:"Repo Rate: RBI lends to commercial banks (against securities). Reverse Repo Rate: RBI borrows from commercial banks. Repo > Reverse Repo always. Higher repo → costlier borrowing → inflation control. Both are MPC tools."},
+    {q:"Explain GDP, GNP, NNP and NDP.",a:"GDP = Output within country's borders. GNP = GDP + Net Factor Income from Abroad (NFIA). NNP = GNP − Depreciation. NDP = GDP − Depreciation. India uses GDP at constant prices (base year 2011-12)."},
+    {q:"Explain the GST structure in India.",a:"Goods & Services Tax — One Nation One Tax (101st CA, 2016). Dual: CGST+SGST for intra-state; IGST for inter-state. Four slabs: 5%, 12%, 18%, 28%. GST Council: Union FM + State FMs. Threshold: ₹40L goods, ₹20L services."},
+    {q:"What is Fiscal Deficit and its implications?",a:"Fiscal Deficit = Total Expenditure − Total Receipts (ex-borrowings). Shows government borrowing requirement. High FD → crowding out private investment, inflation, rising public debt. FRBM Act 2003 targets FD at 3% of GDP."},
+    {q:"Types of inflation and how it's measured in India?",a:"Demand-pull, Cost-push, Structural, Stagflation. India measures via: CPI (base 2012, RBI primary tool) and WPI (base 2011-12, producer prices). RBI targets CPI at 4% (±2%)."},
+  ],
+  geography:[
+    {q:"Explain the mechanism of the Indian Monsoon.",a:"SW Monsoon (Jun-Sep): Low pressure over Thar Desert pulls moist air from Arabian Sea and Bay of Bengal. NE Monsoon (Oct-Dec): Winds from NE, affect Tamil Nadu coast. ENSO (El Niño-La Niña) strongly influences monsoon strength."},
+    {q:"What are the major physiographic divisions of India?",a:"(1) Himalayas — Himadri, Himachal, Shivaliks. (2) Northern Plains — Indus, Ganga, Brahmaputra. (3) Peninsular Plateau — Deccan, Aravalli, Vindhyas. (4) Coastal Plains — Eastern (wider) & Western (narrow). (5) Islands — A&N, Lakshadweep."},
+    {q:"What is El Niño and its impact on India?",a:"Warming of central-eastern Pacific off Peru coast, weakens trade winds. Impact: weakens SW Monsoon, causes droughts (1987, 2009). La Niña (opposite): strengthens monsoon, floods. Indian Ocean Dipole (IOD) can partially counteract El Niño."},
+  ],
+  modernhistory:[
+    {q:"Causes and consequences of the Revolt of 1857?",a:"Causes: Political (Doctrine of Lapse), Economic (drain of wealth), Military (Enfield rifle cartridge), Social (interference in customs). Consequences: Company rule ended, Crown took over (1858), Army reorganised, seeds of nationalism."},
+    {q:"Explain Gandhi's philosophy and methods.",a:"Satyagraha: Truth-force / non-violent resistance. Ahimsa: Non-violence as means AND end. Swaraj: Self-rule. Methods: Non-cooperation, Civil Disobedience, Fasts. Key movements: Champaran (1917), NCM (1920), CDM (1930), QIM (1942)."},
+    {q:"Significance of the Dandi March?",a:"CDM launched Mar 12, 1930. Gandhi marched 241 miles from Sabarmati to Dandi in 24 days with 78 followers to make salt — defying Salt Laws. Significance: Mass participation, international attention, led to Gandhi-Irwin Pact (1931)."},
+  ],
+  environment:[
+    {q:"What are biodiversity hotspots? Name India's hotspots.",a:"Hotspot: ≥1500 endemic vascular plant species AND >70% habitat lost. India has 4: (1) Himalayas, (2) Indo-Burma (NE India), (3) Western Ghats & Sri Lanka, (4) Sundaland (Nicobar Islands)."},
+    {q:"Explain the Paris Agreement and India's NDC commitments.",a:"Paris Agreement (COP21, 2015): Limit warming to 1.5°C above pre-industrial. India's updated NDC (2022): (1) 45% GDP emissions intensity cut by 2030, (2) 50% electricity from non-fossil by 2030, (3) Net Zero by 2070."},
+    {q:"Difference between in-situ and ex-situ conservation?",a:"In-situ (on-site): National Parks, Wildlife Sanctuaries, Biosphere Reserves, Tiger Reserves. Ex-situ (off-site): Zoos, Botanical Gardens, Seed Banks, Gene Banks, Tissue Culture. Both are complementary."},
+  ],
+  sciencetech:[
+    {q:"ISRO's major recent missions?",a:"Chandrayaan-3 (2023): Soft-landed on Moon's south pole. Aditya-L1 (2023): Sun observation at L1 Lagrange point. Gaganyaan: Human spaceflight. XPoSat (2024): X-ray polarimetry."},
+    {q:"Explain CRISPR-Cas9 and its applications.",a:"Gene-editing tool — Cas9 protein guided by RNA cuts DNA at specific location; gene deleted/modified/inserted. Applications: Sickle cell, cancer therapy, GM crops. Nobel Prize 2020: Doudna & Charpentier."},
+  ],
+  artculture:[
+    {q:"Differentiate Nagara, Dravidian and Vesara temple styles.",a:"Nagara (North): Curvilinear Shikhara, high plinth. Examples: Khajuraho, Konark. Dravidian (South): Gopuram (tallest at gateway), Vimana over garbhagriha. Examples: Brihadeeswarar, Meenakshi. Vesara: Hybrid, Chalukyas & Hoysalas."},
+    {q:"Name the 8 classical dance forms of India.",a:"(1) Bharatanatyam — TN, (2) Kathak — North India, (3) Kathakali — Kerala, (4) Manipuri — Manipur, (5) Kuchipudi — AP, (6) Odissi — Odisha, (7) Sattriya — Assam, (8) Mohiniyattam — Kerala."},
+  ],
+};
+
+const RD=[1,3,7,15,30,60]; // spaced repetition days
+const totalTopics=SUBJECTS.reduce((a,s)=>a+s.topics.length,0);
+
+/* ═══════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════ */
+const G=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const todayStr=()=>new Date().toISOString().split("T")[0];
+const addDays=(d,n)=>{const dt=new Date(d);dt.setDate(dt.getDate()+n);return dt.toISOString().split("T")[0]};
+const daysDiff=d=>{const a=new Date();a.setHours(0,0,0,0);const b=new Date(d);b.setHours(0,0,0,0);return Math.round((b-a)/86400000)};
+const fmtDate=d=>new Date(d).toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+const fmtTime=d=>new Date(d).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});
+const pbarH=(p,c,h=4)=>`<div style="height:${h}px;border-radius:99px;overflow:hidden;background:var(--bdr)"><div style="height:100%;width:${p}%;background:${c};border-radius:99px;transition:width .5s ease"></div></div>`;
+const badgeH=(c,t)=>`<span class="badge" style="background:${c}22;color:${c}">${esc(t)}</span>`;
+const tagH=(c,t)=>`<span class="tag" style="background:${c}15;color:${c};border-color:${c}44">${esc(t)}</span>`;
+function showFlash(m,col="#34d399"){const f=G("flash");f.textContent=m;f.style.color=col;f.style.opacity="1";clearTimeout(window._ft);window._ft=setTimeout(()=>f.style.opacity="0",2200)}
+
+/* ═══════════════════════════════════════
+   INDEXED DB WRAPPER
+═══════════════════════════════════════ */
+let db=null;
+const DB_NAME="cse2027db";
+const DB_VER=1;
+
+function initDB(){
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=e=>{
+      const d=e.target.result;
+      if(!d.objectStoreNames.contains("settings")){d.createObjectStore("settings",{keyPath:"key"})}
+      if(!d.objectStoreNames.contains("topics")){
+        const s=d.createObjectStore("topics",{keyPath:"id"});
+        s.createIndex("subjectId","subjectId",{unique:false});
+      }
+      if(!d.objectStoreNames.contains("revisions")){
+        const s=d.createObjectStore("revisions",{keyPath:"id"});
+        s.createIndex("dueDate","dueDate",{unique:false});
+        s.createIndex("topicId","topicId",{unique:false});
+      }
+      if(!d.objectStoreNames.contains("sessions")){
+        const s=d.createObjectStore("sessions",{keyPath:"id",autoIncrement:true});
+        s.createIndex("date","date",{unique:false});
+        s.createIndex("subject","subject",{unique:false});
+      }
+      if(!d.objectStoreNames.contains("tasks")){
+        const s=d.createObjectStore("tasks",{keyPath:"id",autoIncrement:true});
+        s.createIndex("done","done",{unique:false});
+      }
+      if(!d.objectStoreNames.contains("cornell")){
+        const s=d.createObjectStore("cornell",{keyPath:"id",autoIncrement:true});
+        s.createIndex("date","date",{unique:false});
+      }
+    };
+    req.onsuccess=e=>{db=e.target.result;res(db)};
+    req.onerror=e=>{rej(e.target.error)};
+  });
+}
+
+function dbGet(store,key){return new Promise((res,rej)=>{const tx=db.transaction(store,"readonly");const req=tx.objectStore(store).get(key);req.onsuccess=e=>res(e.target.result);req.onerror=e=>rej(e.target.error)})}
+function dbPut(store,obj){return new Promise((res,rej)=>{const tx=db.transaction(store,"readwrite");const req=tx.objectStore(store).put(obj);req.onsuccess=e=>res(e.target.result);req.onerror=e=>rej(e.target.error)})}
+function dbDelete(store,key){return new Promise((res,rej)=>{const tx=db.transaction(store,"readwrite");const req=tx.objectStore(store).delete(key);req.onsuccess=e=>res(e.target.result);req.onerror=e=>rej(e.target.error)})}
+function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,"readonly");const req=tx.objectStore(store).getAll();req.onsuccess=e=>res(e.target.result);req.onerror=e=>rej(e.target.error)})}
+function dbGetByIndex(store,idx,val){return new Promise((res,rej)=>{const tx=db.transaction(store,"readonly");const req=tx.objectStore(store).index(idx).getAll(val);req.onsuccess=e=>res(e.target.result);req.onerror=e=>rej(e.target.error)})}
+function dbGetSetting(key,def=null){return dbGet("settings",key).then(r=>r?r.value:def)}
+function dbPutSetting(key,value){return dbPut("settings",{key,value})}
+function dbClearStore(store){return new Promise((res,rej)=>{const tx=db.transaction(store,"readwrite");const req=tx.objectStore(store).clear();req.onsuccess=e=>res();req.onerror=e=>rej(e.target.error)})}
+
+/* ═══════════════════════════════════════
+   STATE (in-memory cache)
+═══════════════════════════════════════ */
+let topicStatus={};   // {topicId: {studied:bool,studiedDate:str}}
+let revisions=[];     // all revision entries
+let sessions=[];      // study sessions
+let tasks=[];         // daily tasks
+let cornellNotes=[];  // saved cornell notes
+let settings={};      // app settings
+let currentStreak=0;
+let curTab=0,openSub="polity",revFilt="all",pyqSub="polity",pyqCur=null;
+let tRunning=false,tInterval=null,tTotal=25*60,tLeft=25*60,pomoCount=0,tMode="FOCUS";
+
+/* ═══════════════════════════════════════
+   LOAD ALL DATA FROM INDEXED DB
+═══════════════════════════════════════ */
+async function loadAllData(){
+  try{
+    // Load topics
+    const ts=await dbGetAll("topics");
+    topicStatus={};
+    ts.forEach(t=>{topicStatus[t.id]={studied:t.studied,studiedDate:t.studiedDate}});
+    // Load revisions
+    revisions=await dbGetAll("revisions");
+    // Load sessions
+    sessions=await dbGetAll("sessions");
+    // Load tasks
+    tasks=await dbGetAll("tasks");
+    // Load cornell
+    cornellNotes=await dbGetAll("cornell");
+    // Load settings
+    const sArr=await dbGetAll("settings");
+    settings={};
+    sArr.forEach(s=>{settings[s.key]=s.value});
+    // Calculate streak
+    currentStreak=calcStreak();
+    updateStreakDisplay();
+  }catch(e){console.error("loadAllData error:",e)}
+}
+
+async function saveTopicStatus(subId,idx,studied){
+  const id=`${subId}_${idx}`;
+  const obj={id,subjectId:subId,topicIdx:idx,studied,studiedDate:studied?todayStr():null};
+  if(studied){topicStatus[id]={studied:true,studiedDate:todayStr()}}else{delete topicStatus[id]}
+  await dbPut("topics",obj);
+}
+
+async function addRevisions(subId,idx,name){
+  const id=`${subId}_${idx}`;
+  const sub=SUBJECTS.find(s=>s.id===subId);
+  // Remove old revisions for this topic
+  const oldRevs=revisions.filter(r=>r.topicId===id);
+  for(const r of oldRevs){await dbDelete("revisions",r.id)}
+  revisions=revisions.filter(r=>r.topicId!==id);
+  // Add new revision entries
+  for(const d of RD){
+    const rv={
+      id:`${id}_r${d}`,topicId:id,topicName:name,
+      subjectId:subId,subjectName:sub.name,subjectColor:sub.color,
+      dueDate:addDays(todayStr(),d),stage:d,done:false
+    };
+    await dbPut("revisions",rv);
+    revisions.push(rv);
+  }
+}
+
+async function removeRevisions(subId,idx){
+  const id=`${subId}_${idx}`;
+  const toDelete=revisions.filter(r=>r.topicId===id);
+  for(const r of toDelete){await dbDelete("revisions",r.id)}
+  revisions=revisions.filter(r=>r.topicId!==id);
+}
+
+async function markRevDone(rid){
+  const rv=revisions.find(r=>r.id===rid);
+  if(!rv)return;
+  rv.done=true;rv.doneDate=todayStr();
+  await dbPut("revisions",rv);
+  // Log session
+  await logSessionSilent(rv.subjectId||"unknown",0.25,"Revision: "+rv.topicName);
+  renderAll();
+  showFlash("Revision done ✓");
+}
+
+async function addSession(subject,hours,notes=""){
+  const sess={date:todayStr(),subject,hours:parseFloat(hours)||0,notes,timestamp:Date.now()};
+  const id=await dbPut("sessions",sess);
+  sess.id=id;
+  sessions.push(sess);
+  // Update streak
+  await updateStreak();
+  return sess;
+}
+
+async function logSessionSilent(subject,hours,notes){
+  await addSession(subject,hours,notes);
+}
+
+async function logSession(){
+  const sub=G("pomo-subject")?G("pomo-subject").value:"";
+  const subName=sub?SUBJECTS.find(s=>s.id===sub)?.name||sub:"General Study";
+  await addSession(sub||"general",1,subName);
+  renderAnalytics();
+  showFlash("Session logged! 🎉");
+}
+
+/* ═══════════════════════════════════════
+   STREAK LOGIC
+═══════════════════════════════════════ */
+function calcStreak(){
+  const dates=new Set(sessions.map(s=>s.date));
+  let streak=0;
+  const dt=new Date();
+  for(let i=0;i<365;i++){
+    const ds=dt.toISOString().split("T")[0];
+    if(dates.has(ds)){streak++;dt.setDate(dt.getDate()-1)}
+    else if(i===0){dt.setDate(dt.getDate()-1)} // allow for today not yet studied
+    else break;
+  }
+  return streak;
+}
+
+async function updateStreak(){
+  currentStreak=calcStreak();
+  await dbPutSetting("lastStudied",todayStr());
+  updateStreakDisplay();
+}
+
+function updateStreakDisplay(){
+  const sv=G("s-streak");if(sv)sv.textContent=currentStreak;
+  const sbv=G("sb-streak-val");if(sbv)sbv.textContent=currentStreak;
+}
+
+/* ═══════════════════════════════════════
+   TOPIC ACTIONS
+═══════════════════════════════════════ */
+async function markStudied(subId,idx,name){
+  await saveTopicStatus(subId,idx,true);
+  await addRevisions(subId,idx,name);
+  await logSessionSilent(subId,0.5,"Studied: "+name);
+  await updateStreak();
+  renderAll();
+  showFlash("Marked studied ✓ Revisions scheduled!");
+}
+
+async function unmark(subId,idx){
+  await saveTopicStatus(subId,idx,false);
+  await removeRevisions(subId,idx);
+  renderAll();
+  showFlash("Unmarked");
+}
+
+async function clearAll(){
+  if(!confirm("Reset ALL progress? This cannot be undone."))return;
+  await dbClearStore("topics");
+  await dbClearStore("revisions");
+  topicStatus={};revisions=[];
+  renderAll();
+  showFlash("Progress reset","#ef4444");
+}
+
+/* ═══════════════════════════════════════
+   COMPUTED QUERIES
+═══════════════════════════════════════ */
+const Q=()=>revisions.filter(r=>!r.done);
+const overdueRevs=()=>Q().filter(r=>daysDiff(r.dueDate)<0).sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate));
+const todayRevs=()=>Q().filter(r=>daysDiff(r.dueDate)===0);
+const weekRevs=()=>Q().filter(r=>daysDiff(r.dueDate)>0&&daysDiff(r.dueDate)<=7).sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate));
+const allRevsSorted=()=>[...overdueRevs(),...todayRevs(),...weekRevs(),...Q().filter(r=>daysDiff(r.dueDate)>7).sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate))];
+const totalDone=()=>Object.keys(topicStatus).filter(k=>topicStatus[k].studied).length;
+const totalRDone=()=>revisions.filter(r=>r.done).length;
+const pct=()=>totalTopics?Math.round(totalDone()/totalTopics*100):0;
+</script><script>
+/* ═══════════════════════════════════════
+   RENDER ALL
+═══════════════════════════════════════ */
+function renderAll(){
+  renderHeader();
+  renderToday();
+  renderTopics();
+  renderRevisions();
+  renderProgress();
+  renderPhases();
+  renderAnalytics();
+  renderCornellList();
+  updateBadges();
+}
+
+function renderHeader(){
+  const now=new Date();
+  const day=now.toLocaleDateString("en-IN",{weekday:"long"});
+  const date=now.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+  const hd=G("hdr-day"),hdt=G("hdr-date");
+  if(hd)hd.textContent=day;
+  if(hdt)hdt.textContent=date;
+  const done=totalDone(),tot=totalTopics,p=pct();
+  const hpb=G("hdr-pbar"),hpt=G("hdr-prog-txt");
+  if(hpb)hpb.style.width=p+"%";
+  if(hpt)hpt.textContent=`${done}/${tot} · ${p}%`;
+  const sd=G("s-done"),sdu=G("s-due"),srd=G("s-rdone"),ss=G("s-streak");
+  if(sd)sd.textContent=done;
+  if(sdu)sdu.textContent=overdueRevs().length+todayRevs().length;
+  if(srd)srd.textContent=totalRDone();
+  if(ss)ss.textContent=currentStreak;
+}
+
+function updateBadges(){
+  const revDue=overdueRevs().length+todayRevs().length;
+  const rb=G("rev-badge");
+  if(rb){rb.textContent=revDue;rb.style.display=revDue>0?"flex":"none"}
+  const sb2=G("sb-rev-badge");if(sb2)sb2.textContent=revDue;
+  const sb1=G("sb-done-badge");if(sb1)sb1.textContent=totalDone();
+}
+
+/* ═══════════════════════════════════════
+   TODAY PANEL
+═══════════════════════════════════════ */
+function renderToday(){
+  // Mentor tip
+  const t=TIPS[Math.floor(Math.random()*TIPS.length)];
+  const ml=G("mentor-lbl"),mi=G("mentor-ic"),mt=G("mentor-tip");
+  if(ml)ml.textContent="Daily Wisdom";
+  if(mi)mi.textContent=t.ic;
+  if(mt)mt.textContent=t.tip;
+
+  // Quick tasks preview
+  const qt=G("today-tasks-quick");
+  if(qt){
+    const pending=tasks.filter(t=>!t.done);
+    if(pending.length>0){
+      qt.innerHTML=`<div class="card"><div class="card-title" style="display:flex;justify-content:space-between"><span>Today's Tasks</span><span style="color:var(--pri)">${pending.length} pending</span></div>${
+        pending.slice(0,3).map(t=>`<div class="task-item" style="margin-bottom:3px"><div class="task-cb ${t.done?"done":""}" onclick="toggleTask(${t.id})">${t.done?'<span style="color:#fff;font-size:8px;font-weight:900">✓</span>':""}</div><span class="task-txt">${esc(t.text)}</span></div>`).join("")
+      }${pending.length>3?`<div style="font-size:9px;color:var(--muted);text-align:center;margin-top:4px">+${pending.length-3} more tasks</div>`:""}</div>`;
+    }else{qt.innerHTML=""}
+  }
+
+  // Overdue
+  const os=G("overdue-sec");
+  if(os){
+    const od=overdueRevs();
+    os.innerHTML=od.length?`<div class="card" style="border-color:#7f1d1d"><div class="card-title" style="color:var(--danger)">⚠️ ${od.length} Overdue Revision${od.length>1?"s":""}</div>${od.slice(0,5).map(r=>`<div class="overdue-item"><div class="item-info"><div class="item-name">${esc(r.topicName)}</div><div class="item-meta">${tagH(r.subjectColor||"#6366f1",r.subjectName||"")} ${badgeH("#ef4444",daysDiff(r.dueDate)+" days late")}</div></div><button class="cbtn" style="background:#7f1d1d;font-size:9px" onclick="markRevDone('${r.id}')">Done ✓</button></div>`).join("")}${od.length>5?`<div style="font-size:9px;color:var(--muted);text-align:center;padding:5px">+${od.length-5} more…</div>`:""}</div>`:"";
+  }
+
+  // Today revisions
+  const ts=G("today-sec");
+  if(ts){
+    const td=todayRevs();
+    ts.innerHTML=td.length?`<div class="card" style="border-color:#065f46"><div class="card-title" style="color:var(--ok)">📅 ${td.length} Due Today</div>${td.map(r=>`<div class="today-item"><div class="item-info"><div class="item-name">${esc(r.topicName)}</div><div class="item-meta">${tagH(r.subjectColor||"#6366f1",r.subjectName||"")} ${badgeH("#34d399","Rev "+(r.stage||"?")+"d")}</div></div><button class="cbtn" style="background:#065f46;font-size:9px" onclick="markRevDone('${r.id}')">Done ✓</button></div>`).join("")}</div>`:"";
+  }
+
+  // Up next
+  const ns=G("next-sec");
+  if(ns){
+    const unStudied=SUBJECTS.flatMap(s=>s.topics.map((t,i)=>({subId:s.id,idx:i,name:t,sub:s}))).filter(t=>!topicStatus[`${t.subId}_${t.idx}`]?.studied);
+    if(unStudied.length>0){
+      const next=unStudied[0];
+      ns.innerHTML=`<div class="card" style="border-color:#064e3b"><div class="card-title">⚡ Up Next to Study</div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div style="font-size:12px;font-weight:700;color:var(--txt)">${esc(next.name)}</div><div style="margin-top:4px">${tagH(next.sub.color,next.sub.icon+" "+next.sub.name)}</div></div><button class="cbtn" style="background:var(--pri);font-size:10px" onclick="markStudied('${next.subId}',${next.idx},'${esc(next.name).replace(/'/g,"\\'")}')">Mark Studied ✓</button></div></div>`;
+    }else{ns.innerHTML=`<div class="card"><div class="empty"><div class="empty-ic">🎉</div><div class="empty-t">All topics studied!</div></div></div>`}
+  }
+
+  // Week ahead
+  const ws=G("week-sec");
+  if(ws){
+    const wk=weekRevs().slice(0,5);
+    ws.innerHTML=wk.length?`<div class="card"><div class="card-title">📅 Next 7 Days (${wk.length} revisions)</div>${wk.map(r=>`<div class="week-item"><div class="item-info"><div class="item-name">${esc(r.topicName)}</div><div class="item-meta">${tagH(r.subjectColor||"#6366f1",r.subjectName||"")} ${badgeH("#f59e0b",fmtDate(r.dueDate))}</div></div></div>`).join("")}</div>`:"";
+  }
+}
+
+/* ═══════════════════════════════════════
+   TOPICS PANEL
+═══════════════════════════════════════ */
+function renderTopics(){
+  const query=(G("s-inp")?G("s-inp").value:"").toLowerCase().trim();
+  const scl=G("s-clear");if(scl)scl.style.display=query?"block":"none";
+  const sr=G("search-res");
+
+  if(query){
+    const results=[];
+    SUBJECTS.forEach(s=>{
+      s.topics.forEach((t,i)=>{
+        if(t.toLowerCase().includes(query)){
+          const id=`${s.id}_${i}`;
+          const done=topicStatus[id]?.studied;
+          results.push({subId:s.id,idx:i,name:t,sub:s,done});
+        }
+      });
+    });
+    if(sr)sr.innerHTML=results.length?`<div class="card"><div class="card-title">🔍 ${results.length} results</div>${results.map(r=>`<div class="topic-row"><div class="topic-cb ${r.done?"done":""}" onclick="${r.done?`unmark('${r.subId}',${r.idx})`:`markStudied('${r.subId}',${r.idx},'${esc(r.name).replace(/'/g,"\\'")}')` }">${r.done?'<span style="color:#fff;font-size:9px;font-weight:900">✓</span>':""}</div><div><div class="topic-name">${esc(r.name)}</div><div style="margin-top:2px">${tagH(r.sub.color,r.sub.icon+" "+r.sub.name)}</div></div></div>`).join("")}</div>`:`<div class="empty"><div class="empty-ic">🔍</div><div class="empty-t">No matches for "${esc(query)}"</div></div>`;
+    G("subj-list").innerHTML="";
+    return;
+  }
+  if(sr)sr.innerHTML="";
+  renderSubjectList();
+}
+
+function renderSubjectList(){
+  const sl=G("subj-list");if(!sl)return;
+  sl.innerHTML=SUBJECTS.map(s=>{
+    const done=s.topics.filter((_,i)=>topicStatus[`${s.id}_${i}`]?.studied).length;
+    const total=s.topics.length;
+    const p=Math.round(done/total*100);
+    const isOpen=openSub===s.id;
+    return `<div class="subj-card" style="border-color:${s.color}33">
+      <button class="subj-hdr" onclick="openSub='${s.id}';renderSubjectList()">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <span style="font-size:16px">${s.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:700;color:var(--txt)">${esc(s.name)}</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:1px">${s.period}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;font-weight:700;color:${s.color};font-family:var(--mono)">${done}/${total}</div>
+            <div style="font-size:8px;color:var(--muted)">${p}%</div>
+          </div>
+          <span style="color:var(--muted);font-size:12px;margin-left:4px">${isOpen?"▲":"▼"}</span>
+        </div>
+        ${pbarH(p,s.color,3)}
+      </button>
+      ${isOpen?s.topics.map((t,i)=>{
+        const id=`${s.id}_${i}`;
+        const done=topicStatus[id]?.studied;
+        return `<div class="topic-row">
+          <div class="topic-cb ${done?"done":""}" onclick="${done?`unmark('${s.id}',${i})`:`markStudied('${s.id}',${i},'${esc(t).replace(/'/g,"\\'")}')` }">
+            ${done?'<span style="color:#fff;font-size:9px;font-weight:900">✓</span>':""}
+          </div>
+          <div style="flex:1">
+            <div class="topic-name" style="color:${done?"var(--muted)":"var(--txt)"};text-decoration:${done?"line-through":"none"}">${esc(t)}</div>
+            ${done&&topicStatus[id]?.studiedDate?`<div style="font-size:8px;color:var(--muted);margin-top:1px">Studied ${fmtDate(topicStatus[id].studiedDate)}</div>`:""}
+          </div>
+        </div>`;
+      }).join(""):""}
+    </div>`;
+  }).join("");
+}
+
+function clearSearch(){const inp=G("s-inp");if(inp)inp.value="";renderTopics()}
+
+/* ═══════════════════════════════════════
+   REVISIONS PANEL
+═══════════════════════════════════════ */
+function renderRevisions(){
+  const rfw=G("rf-wrap");
+  if(rfw){
+    const filters=["all","overdue","today","week","done"];
+    const labels=["All","Overdue","Today","This Week","Completed"];
+    rfw.innerHTML=filters.map((f,i)=>`<button class="rf-btn ${revFilt===f?"on":""}" onclick="revFilt='${f}';renderRevisions()">${labels[i]}</button>`).join("");
+  }
+  const rl=G("rev-list");if(!rl)return;
+  let items;
+  if(revFilt==="all")items=allRevsSorted();
+  else if(revFilt==="overdue")items=overdueRevs();
+  else if(revFilt==="today")items=todayRevs();
+  else if(revFilt==="week")items=weekRevs();
+  else items=revisions.filter(r=>r.done).sort((a,b)=>new Date(b.doneDate)-new Date(a.doneDate));
+
+  if(!items.length){rl.innerHTML=`<div class="empty"><div class="empty-ic">🎉</div><div class="empty-t">${revFilt==="done"?"No completed revisions yet":"No revisions in this category"}</div></div>`;return}
+  rl.innerHTML=items.map(r=>{
+    const diff=daysDiff(r.dueDate);
+    let bg,border,statusTag;
+    if(r.done){bg="#052418";border="#065f46";statusTag=badgeH("#34d399","Done "+fmtDate(r.doneDate))}
+    else if(diff<0){bg="#130a0a";border="#7f1d1d";statusTag=badgeH("#ef4444",Math.abs(diff)+"d late")}
+    else if(diff===0){bg="#052e1c";border="#065f46";statusTag=badgeH("#34d399","Due Today")}
+    else if(diff<=7){bg="#1f1200";border="#92400e";statusTag=badgeH("#f59e0b","In "+diff+"d")}
+    else{bg="#0a0b12";border="var(--bdr)";statusTag=badgeH("#6366f1",fmtDate(r.dueDate))}
+    return `<div class="rev-item" style="background:${bg};border-color:${border}">
+      <div style="flex:1;min-width:0">
+        <div class="item-name">${esc(r.topicName)}</div>
+        <div class="item-meta">${tagH(r.subjectColor||"#6366f1",r.subjectName||"")} ${badgeH("#6366f1","Stage "+r.stage+"d")} ${statusTag}</div>
+      </div>
+      ${!r.done?`<button class="cbtn" style="background:${diff<0?"#7f1d1d":"#065f46"};font-size:9px;padding:4px 8px" onclick="markRevDone('${r.id}')">Done ✓</button>`:""}
+    </div>`;
+  }).join("");
+}
+
+/* ═══════════════════════════════════════
+   PROGRESS PANEL
+═══════════════════════════════════════ */
+function renderProgress(){
+  const bp=G("big-pct"),bs=G("big-sub"),sp=G("subj-prog");
+  if(bp)bp.textContent=pct()+"%";
+  if(bs)bs.textContent=`${totalDone()} of ${totalTopics} topics completed`;
+  if(sp){
+    sp.innerHTML=SUBJECTS.map(s=>{
+      const done=s.topics.filter((_,i)=>topicStatus[`${s.id}_${i}`]?.studied).length;
+      const total=s.topics.length;
+      const p=Math.round(done/total*100);
+      return `<div class="subj-prog-row">
+        <div class="subj-prog-top">
+          <div class="subj-prog-name">${s.icon} ${esc(s.name)}</div>
+          <div class="subj-prog-pct" style="color:${s.color}">${done}/${total} · ${p}%</div>
+        </div>
+        ${pbarH(p,s.color,5)}
+      </div>`;
+    }).join("");
+  }
+}
+
+/* ═══════════════════════════════════════
+   PHASES PANEL
+═══════════════════════════════════════ */
+function renderPhases(){
+  const pr=G("plan-rows"),pl=G("phase-list");
+  if(!pr||!pl)return;
+  pr.innerHTML=PHASES.map(p=>`<div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:7px"><div style="width:8px;height:8px;border-radius:50%;background:${p.color};margin-top:3px;flex-shrink:0"></div><div><div style="font-size:11px;font-weight:700;color:${p.color}">${p.emoji} ${p.label}: ${p.title}</div><div style="font-size:10px;color:var(--txt2)">${p.period}</div></div></div>`).join("");
+  pl.innerHTML=PHASES.map(p=>`<div class="phase-card" style="border:1px solid ${p.color}44">
+    <div class="phase-hdr" style="background:${p.color}15"><div style="font-size:12px;font-weight:700;color:${p.color}">${p.emoji} ${p.label}: ${p.title}</div><div style="font-size:10px;color:var(--txt2);margin-top:2px">${p.period}</div></div>
+    <div class="phase-body">
+      ${p.subs.length?`<div style="font-size:9px;color:var(--muted);font-weight:700;margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase">SUBJECTS</div>${p.subs.map(sid=>{const s=SUBJECTS.find(x=>x.id===sid);return s?`<div style="font-size:11px;color:var(--txt2);padding:3px 0;display:flex;align-items:center;gap:6px">${s.icon} ${s.name} <span style="color:var(--muted)">· ${s.cls} classes</span></div>`:"";}).join("")}<div style="margin-top:8px"></div>`:""}
+      <div style="font-size:9px;color:var(--muted);font-weight:700;margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase">MILESTONES</div>
+      ${p.extra.map(e=>`<div class="phase-item">→ <span>${esc(e)}</span></div>`).join("")}
+    </div>
+  </div>`).join("");
+}
+
+/* ═══════════════════════════════════════
+   ANALYTICS & CHARTS
+═══════════════════════════════════════ */
+function renderAnalytics(){
+  // Stats
+  const todaySessions=sessions.filter(s=>s.date===todayStr());
+  const todayHours=todaySessions.reduce((a,s)=>a+(s.hours||0),0);
+  const totalHours=sessions.reduce((a,s)=>a+(s.hours||0),0);
+  const as=G("an-stats");
+  if(as)as.innerHTML=[
+    {v:todayHours.toFixed(1),l:"Hours Today",c:"#34d399"},
+    {v:totalHours.toFixed(0),l:"Total Hours",c:"#6366f1"},
+    {v:currentStreak+"🔥",l:"Day Streak",c:"#f59e0b"},
+  ].map(s=>`<div class="an-stat"><div class="an-stat-v" style="color:${s.c}">${s.v}</div><div class="an-stat-l">${s.l}</div></div>`).join("");
+
+  // Heatmap
+  renderHeatmap();
+  // Line chart
+  renderLineChart();
+  // Bar chart
+  renderBarChart_();
+  // Session log
+  renderSessionLog();
+}
+
+/* ═══════════════════════════════════════
+   CUSTOM HEATMAP (Canvas)
+═══════════════════════════════════════ */
+function renderHeatmap(){
+  const canvas=G("heatmap-canvas");if(!canvas)return;
+  const DAYS=60;
+  const cellSize=11,gap=2,cols=Math.ceil(DAYS/7),rows=7;
+  const w=cols*(cellSize+gap)+4,h=rows*(cellSize+gap)+4;
+  canvas.width=w;canvas.height=h;
+  const ctx=canvas.getContext("2d");
+  ctx.clearRect(0,0,w,h);
+
+  // Build day → count map
+  const counts={};
+  sessions.forEach(s=>{counts[s.date]=(counts[s.date]||0)+(s.hours||1)});
+
+  const today=new Date();
+  const start=new Date(today);start.setDate(start.getDate()-(DAYS-1));
+  // Align to Monday start
+  const startDay=new Date(start);
+  const startDow=startDay.getDay();
+  startDay.setDate(startDay.getDate()-startDow);
+
+  const hml=G("hm-start-label");
+  if(hml)hml.textContent=start.toLocaleDateString("en-IN",{month:"short",day:"numeric"});
+
+  const colors=["#1e2235","#166534","#16a34a","#22c55e","#4ade80"];
+  let col=0,row=0;
+  const dt=new Date(startDay);
+
+  while(dt<=today||row<7){
+    const ds=dt.toISOString().split("T")[0];
+    const isFuture=dt>today;
+    const isBeforeStart=dt<start;
+    let colorIdx=0;
+    if(!isFuture&&!isBeforeStart){
+      const c=counts[ds]||0;
+      colorIdx=c===0?0:c<0.5?1:c<1?2:c<2?3:4;
+    }
+    const x=col*(cellSize+gap)+2;
+    const y=row*(cellSize+gap)+2;
+    if(!isBeforeStart&&!isFuture){
+      ctx.fillStyle=colors[colorIdx];
+      ctx.roundRect?ctx.roundRect(x,y,cellSize,cellSize,2):ctx.fillRect(x,y,cellSize,cellSize);
+      ctx.fill();
+      // today highlight
+      if(ds===todayStr()){ctx.strokeStyle="#a5b4fc";ctx.lineWidth=1;ctx.strokeRect(x+0.5,y+0.5,cellSize-1,cellSize-1)}
+    }
+    row++;
+    if(row===7){row=0;col++}
+    dt.setDate(dt.getDate()+1);
+    if(col>cols+2)break;
+  }
+}
+
+/* ═══════════════════════════════════════
+   CUSTOM LINE CHART (Canvas)
+═══════════════════════════════════════ */
+function renderLineChart(){
+  const canvas=G("line-chart");if(!canvas)return;
+  const DAYS=14;
+  const labels=[],data=[];
+  for(let i=DAYS-1;i>=0;i--){
+    const dt=new Date();dt.setDate(dt.getDate()-i);
+    const ds=dt.toISOString().split("T")[0];
+    labels.push(dt.toLocaleDateString("en-IN",{weekday:"short"}));
+    const hrs=sessions.filter(s=>s.date===ds).reduce((a,s)=>a+(s.hours||0),0);
+    data.push(parseFloat(hrs.toFixed(2)));
+  }
+  drawLineChart(canvas,labels,data,"#6366f1","Study Hours","#a5b4fc");
+}
+
+function drawLineChart(canvas,labels,data,color,ylabel,fillColor){
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth||300,H=canvas.offsetHeight||120;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  const ctx=canvas.getContext("2d");ctx.scale(dpr,dpr);
+  const pad={top:10,right:10,bottom:28,left:32};
+  const cw=W-pad.left-pad.right,ch=H-pad.top-pad.bottom;
+  ctx.clearRect(0,0,W,H);
+  const maxV=Math.max(...data,1);
+  const ySteps=4;
+  // Grid
+  ctx.strokeStyle="#1e2235";ctx.lineWidth=0.8;
+  for(let i=0;i<=ySteps;i++){
+    const y=pad.top+ch*(1-i/ySteps);
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);ctx.stroke();
+    ctx.fillStyle="#4b5563";ctx.font="8px 'Space Mono',monospace";ctx.textAlign="right";
+    ctx.fillText((maxV*i/ySteps).toFixed(1),pad.left-4,y+3);
+  }
+  // Labels
+  const skip=Math.ceil(labels.length/7);
+  labels.forEach((l,i)=>{
+    if(i%skip!==0)return;
+    const x=pad.left+(i/(labels.length-1))*cw;
+    ctx.fillStyle="#4b5563";ctx.font="8px 'Sora',sans-serif";ctx.textAlign="center";
+    ctx.fillText(l,x,H-pad.bottom+11);
+  });
+  // Area fill
+  ctx.beginPath();
+  data.forEach((v,i)=>{
+    const x=pad.left+(i/(data.length-1))*cw;
+    const y=pad.top+ch*(1-v/maxV);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.lineTo(pad.left+cw,pad.top+ch);ctx.lineTo(pad.left,pad.top+ch);ctx.closePath();
+  const grad=ctx.createLinearGradient(0,pad.top,0,pad.top+ch);
+  grad.addColorStop(0,fillColor+"44");grad.addColorStop(1,fillColor+"05");
+  ctx.fillStyle=grad;ctx.fill();
+  // Line
+  ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.lineJoin="round";
+  data.forEach((v,i)=>{
+    const x=pad.left+(i/(data.length-1))*cw;
+    const y=pad.top+ch*(1-v/maxV);
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  // Dots
+  data.forEach((v,i)=>{
+    const x=pad.left+(i/(data.length-1))*cw;
+    const y=pad.top+ch*(1-v/maxV);
+    if(v>0){ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()}
+  });
+}
+
+/* ═══════════════════════════════════════
+   CUSTOM BAR CHART (Canvas)
+═══════════════════════════════════════ */
+function renderBarChart_(){
+  const canvas=G("bar-chart");if(!canvas)return;
+  const subjectHours={};
+  SUBJECTS.forEach(s=>{
+    subjectHours[s.name.split(" ")[0]]=sessions.filter(sess=>sess.subject===s.id).reduce((a,s)=>a+(s.hours||0),0);
+  });
+  const labels=Object.keys(subjectHours);
+  const data=Object.values(subjectHours);
+  const colors=["#6366f1","#38bdf8","#34d399","#c084fc","#fb7185","#a3e635","#fb923c","#22d3ee"];
+  drawBarChart(canvas,labels,data,colors);
+}
+
+function drawBarChart(canvas,labels,data,colors){
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.offsetWidth||300,H=canvas.offsetHeight||140;
+  canvas.width=W*dpr;canvas.height=H*dpr;
+  const ctx=canvas.getContext("2d");ctx.scale(dpr,dpr);
+  const pad={top:10,right:8,bottom:40,left:32};
+  const cw=W-pad.left-pad.right,ch=H-pad.top-pad.bottom;
+  ctx.clearRect(0,0,W,H);
+  const maxV=Math.max(...data,0.1);
+  const ySteps=4;
+  ctx.strokeStyle="#1e2235";ctx.lineWidth=0.8;
+  for(let i=0;i<=ySteps;i++){
+    const y=pad.top+ch*(1-i/ySteps);
+    ctx.beginPath();ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cw,y);ctx.stroke();
+    ctx.fillStyle="#4b5563";ctx.font="8px 'Space Mono',monospace";ctx.textAlign="right";
+    ctx.fillText((maxV*i/ySteps).toFixed(1),pad.left-4,y+3);
+  }
+  const bw=Math.min(28,(cw/labels.length)*0.65);
+  const gap=(cw-bw*labels.length)/(labels.length+1);
+  labels.forEach((l,i)=>{
+    const x=pad.left+gap+(bw+gap)*i;
+    const h_=ch*(data[i]/maxV);
+    const y=pad.top+ch-h_;
+    const grad=ctx.createLinearGradient(0,y,0,y+h_);
+    grad.addColorStop(0,colors[i%colors.length]);
+    grad.addColorStop(1,colors[i%colors.length]+"55");
+    ctx.fillStyle=grad;
+    ctx.roundRect?ctx.roundRect(x,y,bw,h_,3):ctx.fillRect(x,y,bw,h_);
+    ctx.fill();
+    ctx.fillStyle="#6b7280";ctx.font=`7px 'Sora',sans-serif`;ctx.textAlign="center";
+    const truncL=l.length>5?l.substring(0,5)+"…":l;
+    ctx.fillText(truncL,x+bw/2,H-pad.bottom+9);
+    if(data[i]>0){ctx.fillStyle="#e8eaf0";ctx.font="7px 'Space Mono',monospace";ctx.fillText(data[i].toFixed(1),x+bw/2,y-3)}
+  });
+}
+
+/* ═══════════════════════════════════════
+   SESSION LOG
+═══════════════════════════════════════ */
+function renderSessionLog(){
+  const sl=G("session-log");if(!sl)return;
+  const recent=[...sessions].sort((a,b)=>b.timestamp-a.timestamp).slice(0,15);
+  if(!recent.length){sl.innerHTML=`<div class="empty"><div class="empty-ic">📊</div><div class="empty-t">No sessions logged yet</div></div>`;return}
+  sl.innerHTML=recent.map(s=>{
+    const sub=SUBJECTS.find(x=>x.id===s.subject);
+    const color=sub?.color||"#6366f1";
+    return `<div class="session-row">
+      <div class="session-ic" style="background:${color}22">${sub?.icon||"📚"}</div>
+      <div class="session-info">
+        <div class="session-subj">${esc(s.notes||sub?.name||s.subject||"General")}</div>
+        <div class="session-time">${fmtDate(s.date)}${s.timestamp?" · "+fmtTime(s.timestamp):""}</div>
+      </div>
+      <div class="session-dur">${(s.hours||0).toFixed(1)}h</div>
+    </div>`;
+  }).join("");
+}
+
+async function clearAnalytics(){
+  if(!confirm("Clear all session data?"))return;
+  await dbClearStore("sessions");
+  sessions=[];
+  currentStreak=0;
+  updateStreakDisplay();
+  renderAnalytics();
+  showFlash("Analytics cleared","#ef4444");
+}
+</script><script>
+/* ═══════════════════════════════════════
+   CORNELL NOTES
+═══════════════════════════════════════ */
+function updateCornellHeader(){
+  const title=G("cn-title")?.value||"Cornell Notes";
+  const date=G("cn-date")?.value||todayStr();
+  const ht=G("cn-header-title"),hd=G("cn-header-date");
+  if(ht)ht.textContent=title;
+  if(hd)hd.textContent=new Date(date).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+}
+
+async function saveCornellNote(){
+  const title=G("cn-title")?.value.trim()||"Untitled Note";
+  const date=G("cn-date")?.value||todayStr();
+  const cues=G("cn-cues")?.value||"";
+  const notes=G("cn-notes")?.value||"";
+  const summary=G("cn-summary")?.value||"";
+  if(!cues&&!notes&&!summary){showFlash("Nothing to save","#f59e0b");return}
+  const note={title,date,cues,notes,summary,timestamp:Date.now()};
+  const id=await dbPut("cornell",note);
+  note.id=id;
+  cornellNotes.push(note);
+  renderCornellList();
+  showFlash("Note saved! 📝");
+}
+
+function clearCornell(){
+  if(G("cn-title"))G("cn-title").value="";
+  if(G("cn-cues"))G("cn-cues").value="";
+  if(G("cn-notes"))G("cn-notes").value="";
+  if(G("cn-summary"))G("cn-summary").value="";
+  updateCornellHeader();
+}
+
+function printCornell(){
+  const title=G("cn-title")?.value||"Cornell Notes";
+  const date=G("cn-date")?.value||todayStr();
+  const cues=G("cn-cues")?.value||"";
+  const notes=G("cn-notes")?.value||"";
+  const summary=G("cn-summary")?.value||"";
+  const win=window.open("","_blank");
+  win.document.write(`<!DOCTYPE html><html><head><title>${title}</title><style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Georgia,serif;background:#fff;color:#1a1208;padding:20mm}
+    h1{font-size:16pt;border-bottom:2px solid #1a1208;padding-bottom:6pt;margin-bottom:4pt}
+    .meta{font-size:9pt;color:#7a6e5f;margin-bottom:12pt}
+    .body{display:grid;grid-template-columns:1fr 2.5fr;border:1px solid #ccc;min-height:200mm}
+    .cues{border-right:2px solid #c0392b;padding:10pt;background:#faf7f2}
+    .notes{padding:10pt}
+    .label{font-size:7pt;font-weight:bold;text-transform:uppercase;letter-spacing:.1em;color:#c0392b;margin-bottom:6pt}
+    .notes-label{color:#b8860b}
+    pre{font-family:Georgia,serif;font-size:11pt;line-height:1.8;white-space:pre-wrap;word-wrap:break-word}
+    .summary{border-top:2px solid #c0392b;padding:10pt;background:#f8f4ed;grid-column:1/-1}
+    @media print{body{padding:10mm}}
+  </style></head><body>
+    <h1>${title}</h1><div class="meta">${new Date(date).toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})} · CORNELL NOTES</div>
+    <div class="body">
+      <div class="cues"><div class="label">Keywords / Cues</div><pre>${cues}</pre></div>
+      <div class="notes"><div class="label notes-label">Notes</div><pre>${notes}</pre></div>
+      <div class="summary"><div class="label">Summary</div><pre>${summary}</pre></div>
+    </div>
+  </body></html>`);
+  win.document.close();
+  setTimeout(()=>{win.print()},300);
+}
+
+function renderCornellList(){
+  const sl=G("cornell-saved-list");if(!sl)return;
+  const sorted=[...cornellNotes].sort((a,b)=>b.timestamp-a.timestamp);
+  if(!sorted.length){sl.innerHTML=`<div class="empty"><div class="empty-ic">📝</div><div class="empty-t">No saved notes yet</div></div>`;return}
+  sl.innerHTML=sorted.map(n=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:11px;font-weight:700;color:var(--txt)">${esc(n.title)}</div>
+      <div style="font-size:9px;color:var(--muted)">${fmtDate(n.date)}</div>
+    </div>
+    <button onclick="loadCornellNote(${n.id})" class="cbtn" style="background:var(--pri);font-size:9px;padding:3px 8px">Load</button>
+    <button onclick="deleteCornellNote(${n.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:0 3px">🗑</button>
+  </div>`).join("");
+}
+
+function loadCornellNote(id){
+  const n=cornellNotes.find(x=>x.id===id);if(!n)return;
+  if(G("cn-title"))G("cn-title").value=n.title||"";
+  if(G("cn-date"))G("cn-date").value=n.date||todayStr();
+  if(G("cn-cues"))G("cn-cues").value=n.cues||"";
+  if(G("cn-notes"))G("cn-notes").value=n.notes||"";
+  if(G("cn-summary"))G("cn-summary").value=n.summary||"";
+  updateCornellHeader();
+  showFlash("Note loaded ✓");
+}
+
+async function deleteCornellNote(id){
+  if(!confirm("Delete this note?"))return;
+  await dbDelete("cornell",id);
+  cornellNotes=cornellNotes.filter(n=>n.id!==id);
+  renderCornellList();
+  showFlash("Deleted","#ef4444");
+}
+
+/* ═══════════════════════════════════════
+   POMODORO TIMER
+═══════════════════════════════════════ */
+function setPreset(mins,mode,btn){
+  document.querySelectorAll(".tp-btn").forEach(b=>b.classList.remove("on"));
+  if(btn)btn.classList.add("on");
+  tMode=mode;
+  const ml=G("t-mode");if(ml)ml.textContent=mode;
+  if(G("t-inp"))G("t-inp").value=mins;
+  resetTimer();
+}
+
+function updateTDisp(){
+  const m=String(Math.floor(tLeft/60)).padStart(2,"0");
+  const s=String(tLeft%60).padStart(2,"0");
+  const td=G("timer-disp");if(td)td.textContent=`${m}:${s}`;
+  // Ring
+  const fill=G("t-fill");
+  if(fill){const circ=326.7;const off=circ*(1-tLeft/tTotal);fill.style.strokeDashoffset=off.toFixed(1)}
+}
+
+function startTimer(){
+  if(tRunning)return;
+  const v=parseInt(G("t-inp")?.value)||25;
+  if(tLeft===0||(tLeft===tTotal&&tLeft===0)){tTotal=v*60;tLeft=tTotal}
+  if(tLeft<=0){tTotal=v*60;tLeft=tTotal}
+  tRunning=true;
+  const td=G("timer-disp");if(td)td.classList.add("t-pulse");
+  G("t-start").style.display="none";
+  G("t-pause").style.display="inline-block";
+  tInterval=setInterval(()=>{
+    tLeft--;updateTDisp();
+    if(tLeft<=0){
+      clearInterval(tInterval);tRunning=false;
+      if(G("timer-disp"))G("timer-disp").classList.remove("t-pulse");
+      G("t-start").style.display="inline-block";G("t-start").textContent="▶ Start";
+      G("t-pause").style.display="none";
+      pomoCount++;
+      const pc=G("pomo-today");if(pc)pc.textContent=pomoCount;
+      tTotal=25*60;tLeft=tTotal;updateTDisp();
+      sendNotification("⏱ Timer Complete!",`${tMode} session finished. ${tMode==="FOCUS"?"Time for a break!":"Back to work!"}`,true);
+      // Auto-log session
+      const sub=G("pomo-subject")?.value||"general";
+      const mins=parseInt(G("t-inp")?.value)||25;
+      logSessionSilent(sub,mins/60,`Pomodoro: ${tMode}`);
+      renderAnalytics();
+    }
+  },1000);
+}
+
+function pauseTimer(){
+  if(!tRunning)return;
+  clearInterval(tInterval);tRunning=false;
+  if(G("timer-disp"))G("timer-disp").classList.remove("t-pulse");
+  G("t-start").style.display="inline-block";G("t-start").textContent="▶ Resume";
+  G("t-pause").style.display="none";
+}
+
+function resetTimer(){
+  clearInterval(tInterval);tRunning=false;
+  if(G("timer-disp"))G("timer-disp").classList.remove("t-pulse");
+  G("t-start").style.display="inline-block";G("t-start").textContent="▶ Start";
+  G("t-pause").style.display="none";
+  const v=parseInt(G("t-inp")?.value)||25;
+  tTotal=v*60;tLeft=tTotal;
+  updateTDisp();
+}
+
+/* ═══════════════════════════════════════
+   TASKS
+═══════════════════════════════════════ */
+async function addTask(){
+  const inp=G("t-task");if(!inp)return;
+  const v=(inp.value||"").trim();if(!v)return;
+  const task={text:v,done:false,created:todayStr(),timestamp:Date.now()};
+  const id=await dbPut("tasks",task);
+  task.id=id;tasks.push(task);
+  inp.value="";inp.focus();
+  renderTasks();renderToday();
+  showFlash("Task added ✓");
+}
+
+async function toggleTask(id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  t.done=!t.done;
+  await dbPut("tasks",t);
+  renderTasks();renderToday();
+}
+
+async function delTask(id){
+  await dbDelete("tasks",id);
+  tasks=tasks.filter(t=>t.id!==id);
+  renderTasks();renderToday();
+}
+
+async function clearDone(){
+  const done=tasks.filter(t=>t.done);
+  for(const t of done)await dbDelete("tasks",t.id);
+  tasks=tasks.filter(t=>!t.done);
+  renderTasks();
+  showFlash("Cleared completed ✓");
+}
+
+function renderTasks(){
+  const tl=G("task-list");if(!tl)return;
+  const sorted=[...tasks].sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;return b.timestamp-a.timestamp});
+  if(!sorted.length){tl.innerHTML=`<div class="empty" style="padding:16px"><div class="empty-ic">✅</div><div class="empty-t">No tasks yet!</div></div>`;return}
+  tl.innerHTML=sorted.map(t=>`<li class="task-item">
+    <div class="task-cb ${t.done?"done":""}" onclick="toggleTask(${t.id})">${t.done?'<span style="color:#fff;font-size:8px;font-weight:900">✓</span>':""}</div>
+    <span class="task-txt ${t.done?"done":""}">${esc(t.text)}</span>
+    <button class="task-del" onclick="delTask(${t.id})">×</button>
+  </li>`).join("");
+}
+
+async function setTaskReminder(){
+  const time=G("t-task-time")?.value;
+  if(!time){showFlash("Pick a time first","#f59e0b");return}
+  const [h,m]=time.split(":").map(Number);
+  const now=new Date();
+  const trigger=new Date();
+  trigger.setHours(h,m,0,0);
+  if(trigger<=now)trigger.setDate(trigger.getDate()+1);
+  const delay=trigger-now;
+  const pendingTasks=tasks.filter(t=>!t.done);
+  const taskText=pendingTasks.length?`${pendingTasks.length} task${pendingTasks.length>1?"s":""} pending: "${pendingTasks[0].text}"...`:"Check your task list";
+  if("serviceWorker"in navigator&&navigator.serviceWorker.controller){
+    navigator.serviceWorker.controller.postMessage({type:"SCHEDULE_REMINDER",payload:{id:"task-reminder",title:"📋 Task Reminder",body:taskText,triggerTime:trigger.getTime()}});
+    showFlash(`Reminder set for ${time} 🔔`);
+  }else{
+    setTimeout(()=>{sendNotification("📋 Task Reminder",taskText)},delay);
+    showFlash(`Reminder set for ${time} 🔔`);
+  }
+}
+
+/* ═══════════════════════════════════════
+   PYQ
+═══════════════════════════════════════ */
+function renderPYQPills(){
+  const pp=G("pyq-pills");if(!pp)return;
+  pp.innerHTML=Object.keys(PYQ).map(sid=>{
+    const s=SUBJECTS.find(x=>x.id===sid)||{name:sid,color:"#6366f1"};
+    const on=pyqSub===sid;
+    return`<button class="pyq-pill" style="background:${on?s.color+"33":"transparent"};color:${on?s.color:s.color+"99"};border-color:${on?s.color:s.color+"44"}" onclick="pyqSub='${sid}';renderPYQPills();loadPYQ()">${esc(s.name.split(" ")[0])}</button>`;
+  }).join("");
+}
+
+function loadPYQ(){
+  const qs=PYQ[pyqSub]||PYQ.polity;
+  pyqCur=qs[Math.floor(Math.random()*qs.length)];
+  const pb=G("pyq-box"),pa=G("pyq-ans");
+  if(pb)pb.textContent=pyqCur.q;
+  if(pa)pa.style.display="none";
+}
+
+function showAns(){
+  if(!pyqCur)return;
+  const pa=G("pyq-ans");
+  if(pa){pa.textContent=pyqCur.a;pa.style.display="block"}
+}
+
+/* ═══════════════════════════════════════
+   NOTIFICATIONS
+═══════════════════════════════════════ */
+let notifSettings={daily:false,rev:false,streak:false,pomo:true};
+
+function sendNotification(title,body,vibrate=false){
+  if(!("Notification"in window))return;
+  if(Notification.permission==="granted"){
+    if("serviceWorker"in navigator&&navigator.serviceWorker.controller){
+      navigator.serviceWorker.controller.postMessage({type:"SHOW_NOTIFICATION",payload:{title,body,tag:"cse2027-"+Date.now()}});
+    }else{
+      const n=new Notification(title,{body,icon:"./icon-192.png",badge:"./icon-192.png",tag:"cse2027"});
+      if(vibrate&&"vibrate"in navigator)navigator.vibrate([200,100,200]);
+    }
+  }
+}
+
+async function requestNotifPerm(){
+  if(!("Notification"in window)){showFlash("Notifications not supported","#f59e0b");return}
+  const perm=await Notification.requestPermission();
+  if(perm==="granted"){
+    G("notif-grant-bar").style.display="none";
+    G("notif-perm-bar").style.display="none";
+    sendNotification("🔔 Notifications Enabled!","You'll now receive study reminders.");
+    showFlash("Notifications enabled! 🎉");
+    scheduleAllReminders();
+  }else{
+    G("notif-perm-bar").style.display="block";
+    G("notif-grant-bar").style.display="none";
+  }
+}
+
+async function toggleReminder(key){
+  notifSettings[key]=!notifSettings[key];
+  const btn=G("tog-"+key);
+  if(btn)btn.classList.toggle("on",notifSettings[key]);
+  await dbPutSetting("notif_"+key,notifSettings[key]);
+  if(notifSettings[key]&&Notification.permission!=="granted"){
+    await requestNotifPerm();
+  }
+  if(notifSettings[key])scheduleAllReminders();
+}
+
+function scheduleAllReminders(){
+  if(Notification.permission!=="granted")return;
+  const reminderTime=G("reminder-time")?.value||"06:00";
+  if(notifSettings.daily&&"serviceWorker"in navigator&&navigator.serviceWorker.controller){
+    const [h,m]=reminderTime.split(":").map(Number);
+    const trigger=new Date();trigger.setHours(h,m,0,0);
+    if(trigger<=new Date())trigger.setDate(trigger.getDate()+1);
+    navigator.serviceWorker.controller.postMessage({type:"SCHEDULE_REMINDER",payload:{
+      id:"daily",title:"📚 CSE 2027 — Study Time!",
+      body:`Good morning! Today's target: ${todayRevs().length} revisions due. Keep the streak alive! 🔥`,
+      triggerTime:trigger.getTime()
+    }});
+  }
+  if(notifSettings.streak&&"serviceWorker"in navigator&&navigator.serviceWorker.controller){
+    const trigger=new Date();trigger.setHours(20,0,0,0);
+    if(trigger<=new Date())trigger.setDate(trigger.getDate()+1);
+    navigator.serviceWorker.controller.postMessage({type:"SCHEDULE_REMINDER",payload:{
+      id:"streak",title:"🔥 Protect Your Streak!",
+      body:`Current streak: ${currentStreak} days. Don't break it now!`,
+      triggerTime:trigger.getTime()
+    }});
+  }
+}
+
+async function saveReminderTime(){
+  const t=G("reminder-time")?.value||"06:00";
+  await dbPutSetting("reminderTime",t);
+  if(notifSettings.daily)scheduleAllReminders();
+  showFlash("Reminder time saved ✓");
+}
+
+function sendTestNotif(){
+  if(Notification.permission!=="granted"){requestNotifPerm();return}
+  sendNotification("🔔 CSE 2027 Test","Notifications are working! Study reminders active.",true);
+  showFlash("Test notification sent! 🔔");
+}
+
+function loadNotifSettings(){
+  const gb=G("notif-grant-bar"),pb=G("notif-perm-bar");
+  if(!("Notification"in window)){if(gb)gb.style.display="none";return}
+  if(Notification.permission==="default"){if(gb)gb.style.display="block";if(pb)pb.style.display="none"}
+  else if(Notification.permission==="denied"){if(pb)pb.style.display="block";if(gb)gb.style.display="none"}
+  else{if(gb)gb.style.display="none";if(pb)pb.style.display="none"}
+  Object.keys(notifSettings).forEach(async k=>{
+    const val=await dbGetSetting("notif_"+k,notifSettings[k]);
+    notifSettings[k]=val;
+    const btn=G("tog-"+k);if(btn)btn.classList.toggle("on",val);
+  });
+  dbGetSetting("reminderTime","06:00").then(t=>{const ri=G("reminder-time");if(ri)ri.value=t});
+}
+
+/* ═══════════════════════════════════════
+   BACKUP & EXPORT
+═══════════════════════════════════════ */
+async function exportData(){
+  const backup={
+    version:"4.0",exportDate:new Date().toISOString(),
+    topicStatus,revisions,sessions,tasks,cornellNotes,settings,
+    stats:{totalDone:totalDone(),totalTopics,pct:pct(),currentStreak,totalSessions:sessions.length}
+  };
+  const json=JSON.stringify(backup,null,2);
+  const blob=new Blob([json],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=`cse2027-backup-${todayStr()}.json`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  showFlash("Backup exported! 💾");
+  renderDataSummary();
+}
+
+async function importData(event){
+  const file=event.target.files[0];if(!file)return;
+  try{
+    const text=await file.text();
+    const data=JSON.parse(text);
+    if(!confirm(`Import backup from ${data.exportDate||"unknown date"}?\nThis will MERGE with existing data.`))return;
+    // Import topics
+    if(data.topicStatus){
+      for(const [id,val] of Object.entries(data.topicStatus)){
+        const parts=id.split("_");
+        await dbPut("topics",{id,subjectId:parts[0],topicIdx:parseInt(parts[1]),studied:val.studied,studiedDate:val.studiedDate});
+        topicStatus[id]=val;
+      }
+    }
+    // Import revisions
+    if(data.revisions){
+      for(const rv of data.revisions){
+        await dbPut("revisions",rv);
+        if(!revisions.find(r=>r.id===rv.id))revisions.push(rv);
+      }
+    }
+    // Import sessions
+    if(data.sessions){
+      for(const sess of data.sessions){
+        const id=await dbPut("sessions",sess);
+        if(!sessions.find(s=>s.id===sess.id)){sess.id=id;sessions.push(sess)}
+      }
+    }
+    // Import tasks
+    if(data.tasks){
+      for(const t of data.tasks){
+        const id=await dbPut("tasks",t);
+        if(!tasks.find(x=>x.id===t.id)){t.id=id;tasks.push(t)}
+      }
+    }
+    // Import cornell
+    if(data.cornellNotes){
+      for(const n of data.cornellNotes){
+        const id=await dbPut("cornell",n);
+        if(!cornellNotes.find(x=>x.id===n.id)){n.id=id;cornellNotes.push(n)}
+      }
+    }
+    currentStreak=calcStreak();updateStreakDisplay();
+    renderAll();renderDataSummary();
+    showFlash("Import complete! 🎉");
+  }catch(e){showFlash("Import failed: "+e.message,"#ef4444")}
+  event.target.value="";
+}
+
+function renderDataSummary(){
+  const ds=G("data-summary");if(!ds)return;
+  const totalHours=sessions.reduce((a,s)=>a+(s.hours||0),0);
+  ds.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+      <div>📚 Topics Done:</div><div style="color:var(--ok);font-weight:700">${totalDone()}/${totalTopics}</div>
+      <div>🔁 Revisions:</div><div style="color:var(--pri);font-weight:700">${revisions.length} (${totalRDone()} done)</div>
+      <div>⏱ Sessions:</div><div style="color:var(--cyan);font-weight:700">${sessions.length}</div>
+      <div>⏰ Total Hours:</div><div style="color:var(--warn);font-weight:700">${totalHours.toFixed(1)}h</div>
+      <div>✅ Tasks:</div><div style="color:var(--txt2);font-weight:700">${tasks.length} (${tasks.filter(t=>t.done).length} done)</div>
+      <div>📝 Cornell Notes:</div><div style="color:var(--purple);font-weight:700">${cornellNotes.length}</div>
+      <div>🔥 Streak:</div><div style="color:var(--warn);font-weight:700">${currentStreak} days</div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════
+   NAV + SIDEBAR
+═══════════════════════════════════════ */
+function switchTab(n,closeSidebar=false){
+  curTab=n;
+  // Update panels (0-11)
+  for(let i=0;i<=11;i++){const p=G(`p${i}`);if(p)p.classList.toggle("on",i===n)}
+  // Update bottom nav (only 0-5 in bottom nav)
+  for(let i=0;i<=5;i++){const b=G(`nb${i}`);if(b)b.classList.toggle("on",i===n)}
+  // Update sidebar items
+  document.querySelectorAll(".sb-item").forEach(el=>{
+    el.classList.toggle("on",parseInt(el.dataset.tab)===n);
+  });
+  if(closeSidebar)toggleSidebar(false);
+  // Panel-specific refresh
+  if(n===3)renderAnalytics();
+  if(n===8)renderProgress();
+  if(n===9)renderPhases();
+  if(n===11)renderDataSummary();
+}
+
+function toggleSidebar(force=null){
+  const sb=G("sidebar"),ov=G("sidebar-overlay");
+  const shouldOpen=force!==null?force:!sb.classList.contains("on");
+  sb.classList.toggle("on",shouldOpen);
+  ov.classList.toggle("on",shouldOpen);
+  document.body.style.overflow=shouldOpen?"hidden":"";
+}
+
+/* ═══════════════════════════════════════
+   POPULATE SUBJECT DROPDOWN
+═══════════════════════════════════════ */
+function populateSubjectDropdown(){
+  const sel=G("pomo-subject");if(!sel)return;
+  sel.innerHTML=`<option value="">— Select Subject —</option>` +
+    SUBJECTS.map(s=>`<option value="${s.id}">${s.icon} ${s.name}</option>`).join("");
+}
+
+/* ═══════════════════════════════════════
+   SERVICE WORKER + PWA
+═══════════════════════════════════════ */
+let deferredPrompt=null;
+function registerSW(){
+  if(!("serviceWorker"in navigator))return;
+  navigator.serviceWorker.register("./sw.js",{scope:"./"})
+    .then(reg=>{
+      console.log("SW registered",reg.scope);
+      // Check for updates
+      reg.addEventListener("updatefound",()=>{
+        const newWorker=reg.installing;
+        newWorker.addEventListener("statechange",()=>{
+          if(newWorker.state==="installed"&&navigator.serviceWorker.controller){
+            showFlash("Update available — refresh to apply");
+          }
+        });
+      });
+    })
+    .catch(e=>console.warn("SW registration failed",e));
+
+  window.addEventListener("beforeinstallprompt",e=>{
+    e.preventDefault();deferredPrompt=e;
+    const ib=G("install-bar");if(ib)ib.classList.add("on");
+  });
+  G("ib-btn")?.addEventListener("click",async()=>{
+    if(!deferredPrompt)return;
+    deferredPrompt.prompt();
+    const{outcome}=await deferredPrompt.userChoice;
+    deferredPrompt=null;
+    G("install-bar")?.classList.remove("on");
+    if(outcome==="accepted")sendNotification("🎉 App Installed!","CSE 2027 is now on your home screen!");
+  });
+  G("ib-close")?.addEventListener("click",()=>G("install-bar")?.classList.remove("on"));
+}
+
+/* ═══════════════════════════════════════
+   CORNELL INPUT LISTENERS
+═══════════════════════════════════════ */
+function bindCornellListeners(){
+  ["cn-title","cn-date"].forEach(id=>{
+    const el=G(id);if(el){el.addEventListener("input",updateCornellHeader);el.addEventListener("change",updateCornellHeader)}
+  });
+  // Set today's date as default
+  const cnd=G("cn-date");if(cnd)cnd.value=todayStr();
+  updateCornellHeader();
+}
+
+/* ═══════════════════════════════════════
+   DAILY REVISION NOTIFICATION CHECK
+═══════════════════════════════════════ */
+async function checkDailyRevisionAlert(){
+  const lastAlert=await dbGetSetting("lastRevAlert","");
+  if(lastAlert===todayStr())return;
+  const due=overdueRevs().length+todayRevs().length;
+  if(due>0&&notifSettings.rev&&Notification.permission==="granted"){
+    sendNotification("📚 Revisions Due!",`You have ${due} revision${due>1?"s":""} due today. Keep the streak! 🔥`);
+    await dbPutSetting("lastRevAlert",todayStr());
+  }
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+async function init(){
+  await initDB();
+  await loadAllData();
+  renderAll();
+  renderTasks();
+  renderPYQPills();
+  loadPYQ();
+  updateTDisp();
+  populateSubjectDropdown();
+  bindCornellListeners();
+  loadNotifSettings();
+  scheduleAllReminders();
+  checkDailyRevisionAlert();
+  registerSW();
+  // Hide splash
+  setTimeout(()=>{
+    const s=G("splash");
+    if(s){s.classList.add("hide");setTimeout(()=>{s.style.display="none"},600)}
+  },2000);
+}
+
+window.addEventListener("DOMContentLoaded",init);
+
+// Handle swipe gestures for bottom nav (optional)
+let touchStartX=0;
+document.addEventListener("touchstart",e=>{touchStartX=e.touches[0].clientX},{passive:true});
+document.addEventListener("touchend",e=>{
+  const diff=touchStartX-e.changedTouches[0].clientX;
+  // Only handle large swipes (>100px) and ignore sidebar swipes
+  if(Math.abs(diff)>120&&G("sidebar").classList.contains("on"))return;
+},{passive:true});
+
+// Handle visibility change (app comes to foreground)
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden){
+    renderAll();
+    checkDailyRevisionAlert();
+  }
+});
+
+
+// Handle messages from Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', event => {
+    const { type } = event.data || {};
+    if (type === 'SYNC_COMPLETE') {
+      renderAll();
+      showFlash('Data synced ✓', '#34d399');
+    }
+  });
+}
+
+// Online/offline indicator
+window.addEventListener("online",()=>showFlash("Back online ✓","#34d399"));
+window.addEventListener("offline",()=>showFlash("Offline mode — data saved locally","#f59e0b"));
+</script>
+</body>
+</html>
